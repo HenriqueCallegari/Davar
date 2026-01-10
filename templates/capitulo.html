@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ name }} {{ num }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* estilo mínimo inline para garantir usabilidade imediata */
+    :root{
+      --bg:#0b0d0f; --surface:#0f1416; --text:#e9e5dc; --muted:#bfb8aa; --accent:#caa874;
+    }
+    body{font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:var(--bg); color:var(--text); padding:18px;}
+    .voltar{color:var(--accent); text-decoration:none; display:inline-block; margin-bottom:12px;}
+    h1{margin:6px 0 18px 0}
+    .font-controls { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap }
+    .font-controls button{ padding:8px 10px; border-radius:8px; border:0; cursor:pointer }
+    .search{ display:block; max-width:520px; width:100%; padding:10px 12px; margin:10px 0 18px 0; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:#0b0d11; color:var(--text) }
+    .versiculos{ max-width:900px; margin:0 auto; padding:22px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; list-style:none; }
+    .versiculos li{ margin:14px 0; display:flex; gap:10px; align-items:flex-start; }
+    .verse-controls{ min-width:48px; display:flex; flex-direction:column; gap:6px }
+    .fav-dot{ display:inline-block }
+    .verse-text{ flex:1 }
+    .theme-toggle, .reading-toggle{ position:fixed; right:18px; border-radius:999px; padding:8px 12px; border:0; cursor:pointer; }
+    .theme-toggle{ bottom:18px }
+    .reading-toggle{ bottom:74px }
+    #continueReading{ max-width:900px; margin:0 auto 12px; padding:8px 12px; border-radius:10px; display:none; cursor:pointer; background:linear-gradient(180deg, rgba(202,168,116,0.06), rgba(202,168,116,0.02)); text-align:center }
+    .recent-list{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:12px}
+    .recent-list button{ padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); background:transparent; color:var(--muted) }
+    @media (max-width:640px){ .versiculos{ padding:16px } }
+  </style>
+</head>
+
+<body data-name="{{ name }}" data-abbrev="{{ abbrev }}" data-chapter="{{ num }}">
+  <div id="continueReading" class="continue-reading" role="button" aria-hidden="true"></div>
+
+  <a href="/livro/{{ abbrev }}" class="voltar">← {{ name }}</a>
+  <h1>{{ name }} — Capítulo {{ num }}</h1>
+
+  <div class="font-controls" aria-hidden="false">
+    <button id="fontDown" title="Diminuir fonte">A-</button>
+    <button id="fontUp" title="Aumentar fonte">A+</button>
+    <button id="ttsBtn" title="Ouvir capítulo">🔊 Ouvir</button>
+    <button id="pauseTts" title="Pausar">⏸️</button>
+    <button id="focusBtn" title="Modo Foco (fullscreen)">📖 Foco</button>
+  </div>
+
+  <input id="searchVerse" class="search" placeholder="Buscar neste capítulo..." aria-label="Buscar neste capítulo">
+
+  <ol class="versiculos" id="versiculos">
+    {% for v in texto %}
+      <li data-verse="{{ loop.index }}">
+        <div class="verse-controls" aria-hidden="true">
+          <button class="verse-btn fav-btn" data-verse="{{ loop.index }}" title="Favoritar (f)"><span class="fav-dot" aria-hidden="true">☆</span></button>
+          <button class="verse-btn copy" title="Copiar versículo">📋</button>
+        </div>
+        <div class="verse-text" id="verse-{{ loop.index }}">{{ v }}</div>
+      </li>
+    {% endfor %}
+  </ol>
+
+  <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
+  <button id="readingToggle" class="reading-toggle" aria-pressed="false">Modo leitura</button>
+
+  <div id="recentWrap" class="recent-list" style="display:none"></div>
+
+  {%- raw %}
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    const DATA = {
+      name: document.body.dataset.name || '',
+      abbrev: document.body.dataset.abbrev || '',
+      chapter: Number(document.body.dataset.chapter || 0)
+    };
+
+    const STORAGE = {
+      THEME: "site_theme",
+      READING: "reading_" + DATA.abbrev + "_" + DATA.chapter,
+      LAST: "last_read",
+      FAVS: "bible_favs",
+      FONT: "bible_font",
+      RECENT: "bible_recent"
+    };
+
+    const body = document.body;
+
+    // THEME
+    const themeBtn = document.getElementById('themeToggle');
+    try { if (localStorage.getItem(STORAGE.THEME) === 'light') body.classList.add('light'); } catch(e){}
+    if (themeBtn) themeBtn.addEventListener('click', () => {
+      body.classList.toggle('light');
+      try { localStorage.setItem(STORAGE.THEME, body.classList.contains('light') ? 'light' : 'dark'); } catch(e){}
+    });
+
+    // read last BEFORE overwrite (so continue works)
+    let lastBefore = null;
+    try { lastBefore = JSON.parse(localStorage.getItem(STORAGE.LAST) || "null"); } catch(e){ lastBefore = null; }
+    if (lastBefore && lastBefore.abbrev && !(lastBefore.abbrev === DATA.abbrev && Number(lastBefore.chapter) === DATA.chapter)) {
+      const cont = document.getElementById('continueReading');
+      if (cont) {
+        cont.style.display = 'flex';
+        cont.textContent = '📖 Continuar: ' + lastBefore.name + ' ' + lastBefore.chapter;
+        cont.addEventListener('click', () => {
+          window.location.href = '/livro/' + lastBefore.abbrev + '/capitulo/' + lastBefore.chapter;
+        });
+      }
+    }
+
+    // SAVE current LAST and RECENT
+    try {
+      localStorage.setItem(STORAGE.LAST, JSON.stringify({
+        name: DATA.name, abbrev: DATA.abbrev, chapter: DATA.chapter
+      }));
+    } catch(e){}
+
+    try {
+      let recent = JSON.parse(localStorage.getItem(STORAGE.RECENT) || "[]");
+      const thisEntry = DATA.abbrev + '|' + DATA.name + '|' + DATA.chapter;
+      recent = recent.filter(x => x !== thisEntry);
+      recent.unshift(thisEntry);
+      recent = recent.slice(0,8);
+      localStorage.setItem(STORAGE.RECENT, JSON.stringify(recent));
+    } catch(e){}
+
+    // FAVORITES
+    let favs = [];
+    try { favs = JSON.parse(localStorage.getItem(STORAGE.FAVS) || "[]"); } catch(e){ favs = []; }
+
+    document.querySelectorAll('.versiculos li').forEach(li => {
+      const v = li.dataset.verse;
+      const id = DATA.abbrev + ':' + DATA.chapter + ':' + v;
+      const btn = li.querySelector('.fav-btn');
+      const dot = btn ? btn.querySelector('.fav-dot') : null;
+      if (dot && favs.includes(id)) { dot.textContent = '★'; dot.classList.add('active'); }
+      if (btn) {
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          if (favs.includes(id)) { favs = favs.filter(x => x !== id); if (dot) { dot.textContent = '☆'; dot.classList.remove('active'); } }
+          else { favs.push(id); if (dot) { dot.textContent = '★'; dot.classList.add('active'); } }
+          try { localStorage.setItem(STORAGE.FAVS, JSON.stringify(favs)); } catch(e){}
+        });
+      }
+    });
+
+    // COPY
+    document.querySelectorAll('.copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const li = btn.closest('li'); if (!li) return;
+        const textEl = li.querySelector('.verse-text'); const text = textEl ? textEl.innerText.trim() : '';
+        if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(()=>{ const prev = btn.textContent; btn.textContent='✓'; setTimeout(()=>btn.textContent = prev, 800); })
+          .catch(()=> alert('Não foi possível copiar o versículo.'));
+        } else {
+          const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); } catch(e){ alert('Não foi possível copiar'); }
+          document.body.removeChild(ta);
+        }
+      });
+    });
+
+    // FONT CONTROLS
+    // FONT CONTROLS (corrigido)
+const fontUp = document.getElementById('fontUp');
+const fontDown = document.getElementById('fontDown');
+
+// leia tamanho salvo (ou 18px padrão)
+let size = parseInt(localStorage.getItem(STORAGE.FONT) || "18", 10);
+
+// aplica o tamanho diretamente nos elementos de texto do versículo
+const applyFont = () => {
+  const verseTexts = document.querySelectorAll('.versiculos .verse-text');
+  if (verseTexts.length) {
+    verseTexts.forEach(el => {
+      el.style.fontSize = size + 'px';
+      el.style.lineHeight = '1.6';
+    });
+  } else {
+    // fallback: aplica no container
+    const v = document.querySelector('.versiculos');
+    if (v) v.style.fontSize = size + 'px';
+  }
+  try { localStorage.setItem(STORAGE.FONT, size); } catch(e){}
+};
+
+// chama uma vez para aplicar o tamanho inicial
+applyFont();
+
+// listeners com limites (evita números inválidos)
+if (fontUp) fontUp.addEventListener('click', () => {
+  size = Math.min(40, (size || 18) + 1);
+  applyFont();
+});
+if (fontDown) fontDown.addEventListener('click', () => {
+  size = Math.max(10, (size || 18) - 1);
+  applyFont();
+});
+
+    // READING MODE
+    const readingToggle = document.getElementById('readingToggle');
+    try { if (localStorage.getItem(STORAGE.READING) === '1') { body.classList.add('reading-mode'); if (readingToggle) readingToggle.textContent = 'Sair modo leitura'; } } catch(e){}
+    if (readingToggle) {
+      readingToggle.addEventListener('click', () => {
+        const active = body.classList.toggle('reading-mode');
+        readingToggle.textContent = active ? 'Sair modo leitura' : 'Modo leitura';
+        try { localStorage.setItem(STORAGE.READING, active ? '1' : '0'); } catch(e){}
+      });
+    }
+
+    // SEARCH
+    const search = document.getElementById('searchVerse');
+    if (search) search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      document.querySelectorAll('.versiculos li').forEach(li => {
+        const txt = li.innerText.toLowerCase();
+        li.style.display = txt.includes(q) ? '' : 'none';
+      });
+    });
+
+    // FOCUS (fullscreen)
+    const focusBtn = document.getElementById('focusBtn');
+    if (focusBtn) focusBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{/* ignore */});
+      else document.exitFullscreen().catch(()=>{/* ignore */});
+    });
+
+    // TEXT-TO-SPEECH
+    // ===== TEXT TO SPEECH (voz humana PT-BR) =====
+const ttsBtn = document.getElementById('ttsBtn');
+const pauseTts = document.getElementById('pauseTts');
+
+let utter = null;
+let voices = [];
+let selectedVoice = null;
+
+// carrega vozes do navegador
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+
+  // tenta achar a melhor voz PT-BR
+  selectedVoice =
+    voices.find(v => v.lang === 'pt-BR' && v.name.toLowerCase().includes('google')) ||
+    voices.find(v => v.lang === 'pt-BR' && v.name.toLowerCase().includes('microsoft')) ||
+    voices.find(v => v.lang === 'pt-BR') ||
+    voices.find(v => v.lang.startsWith('pt')) ||
+    voices[0];
+}
+
+// alguns navegadores carregam as vozes depois
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+if (ttsBtn) {
+  ttsBtn.addEventListener('click', () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Leitor de voz não suportado neste navegador.');
+      return;
+    }
+
+    // se já estiver falando, para
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      ttsBtn.textContent = '🔊 Ouvir';
+      return;
+    }
+
+    const text = Array.from(document.querySelectorAll('.verse-text'))
+      .map(n => n.innerText)
+      .join(' ');
+
+    if (!text) return;
+
+    utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'pt-BR';
+
+    if (selectedVoice) {
+      utter.voice = selectedVoice;
+    }
+
+    // ajustes para soar humano
+    utter.rate = 0.95;   // mais natural
+    utter.pitch = 1.05; // menos robótico
+    utter.volume = 1;
+
+    speechSynthesis.speak(utter);
+    ttsBtn.textContent = '🔊 Tocando';
+
+    utter.onend = () => {
+      ttsBtn.textContent = '🔊 Ouvir';
+    };
+  });
+}
+
+if (pauseTts) {
+  pauseTts.addEventListener('click', () => {
+    if (!('speechSynthesis' in window)) return;
+    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+      speechSynthesis.pause();
+    } else if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+    }
+  });
+}
+
+    // RECENT buttons
+    try {
+      const recentWrap = document.getElementById('recentWrap');
+      const recent = JSON.parse(localStorage.getItem(STORAGE.RECENT) || '[]');
+      if (recent.length && recentWrap) {
+        recentWrap.style.display = 'flex';
+        recent.forEach(entry => {
+          const parts = entry.split('|');
+          const abbrev = parts[0], name = parts[1], chapter = parts[2];
+          const btn = document.createElement('button');
+          btn.textContent = name + ' ' + chapter;
+          btn.addEventListener('click', () => window.location.href = '/livro/' + abbrev + '/capitulo/' + chapter);
+          recentWrap.appendChild(btn);
+        });
+      }
+    } catch(e){}
+
+    // KEY SHORTCUTS
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') { e.preventDefault(); if (themeBtn) themeBtn.click(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') { e.preventDefault(); if (readingToggle) readingToggle.click(); }
+      if (e.key.toLowerCase() === 'g') { if (search) search.focus(); }
+      if (e.key.toLowerCase() === 'f') { e.preventDefault(); const first = Array.from(document.querySelectorAll('.versiculos li')).find(li => li.style.display !== 'none'); if (first) { const btn = first.querySelector('.fav-btn'); if (btn) btn.click(); } }
+    });
+
+  }); // DOMContentLoaded
+  </script>
+  {% endraw %}
+
+</body>
+</html>

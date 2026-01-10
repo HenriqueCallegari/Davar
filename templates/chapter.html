@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>{{ livro.name }} {{ capitulo }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h1>{{ livro.name }} - Capítulo {{ capitulo }}</h1>
+  <ol class="versiculos-list">
+    {% for versiculo in versiculos %}
+      <li>{{ versiculo }}</li>
+    {% endfor %}
+  </ol>
+
+  <div style="margin-top: 20px;">
+    {% if capitulo > 1 %}
+      <a href="{{ url_for('chapter', abbrev=livro.abbrev, num=capitulo-1) }}">← Capítulo anterior</a>
+    {% endif %}
+    {% if capitulo < livro.chapters | length %}
+      <a href="{{ url_for('chapter', abbrev=livro.abbrev, num=capitulo+1) }}" style="margin-left: 20px;">Próximo capítulo →</a>
+    {% endif %}
+  </div>
+
+  <div style="margin-top: 20px;">
+    <a href="{{ url_for('book', abbrev=livro.abbrev) }}">← Voltar à lista de capítulos</a>
+    <a href="/" style="margin-left: 20px;">← Voltar à lista de livros</a>
+  </div>
+</body>
+</html>

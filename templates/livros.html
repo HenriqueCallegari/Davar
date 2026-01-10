@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Livros</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+<h1>Livros da Bíblia KJA </h1>
+
+<input type="text" id="busca" placeholder="Buscar livro..." class="search">
+
+<ul class="book-grid" id="listaLivros">
+  {% for l in livros %}
+    <li>
+      <a href="/livro/{{ l.abbrev }}" class="book-card">
+        <div class="book-badge">{{ l.abbrev }}</div>
+        <div class="book-title">{{ l.name }}</div>
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+<script>
+const busca = document.getElementById("busca");
+busca.addEventListener("input", () => {
+  const termo = busca.value.toLowerCase();
+  document.querySelectorAll("#listaLivros li").forEach(li => {
+    li.style.display = li.innerText.toLowerCase().includes(termo) ? "" : "none";
+  });
+});
+</script>
+
+<style>
+.book-card{
+  background:var(--surface);
+  color:var(--text);
+  text-decoration:none;
+  border-radius:12px;
+  padding:10px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  box-shadow:var(--shadow);
+  transition:.15s ease;
+  min-height:75px;
+}
+
+.book-card:hover{
+  transform: translateY(-3px);
+}
+
+.book-badge{
+  background:rgba(255,255,255,.06);
+  padding:6px 12px;          /* antes: 3px 8px */
+  border-radius:16px;
+  font-size:13px;           /* antes: 10px */
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--muted-text);
+}
+
+
+.book-title{
+  font-size:13px;
+  font-weight:600;
+  text-align:center;
+  line-height:1.15;
+}
+
+</style>
+
+</body>
+</html>

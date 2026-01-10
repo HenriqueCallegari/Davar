@@ -1,0 +1,284 @@
+/* RESET */
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family: "Georgia", "Times New Roman", serif;
+}
+
+/* BASE */
+body{
+  background:#f5f3ef;
+  color:#222;
+  line-height:1.8;
+  transition:.4s;
+}
+
+/* TEMA ESCURO */
+body:not(.light){
+  background:#0f1115;
+  color:#eaeaea;
+}
+
+/* HEADER */
+h1{
+  text-align:center;
+  margin:20px 10px;
+  font-size:1.6rem;
+}
+
+/* VOLTAR */
+.voltar{
+  display:block;
+  text-align:center;
+  margin-top:12px;
+  color:#888;
+  text-decoration:none;
+}
+
+/* CONTAINER DE LEITURA */
+.versiculos{
+  max-width:720px;
+  margin:30px auto;
+  padding:30px 28px;
+  background:#ffffff;
+  border-radius:14px;
+  box-shadow:0 10px 40px rgba(0,0,0,.06);
+  list-style:none;
+  counter-reset:verse;
+}
+
+/* DARK */
+body:not(.light) .versiculos{
+  background:#16181d;
+  box-shadow:0 0 0 transparent;
+}
+
+/* VERSÍCULOS */
+.versiculos li{
+  margin-bottom:22px;
+  font-size:1.15rem;
+  position:relative;
+  padding-left:38px;
+  transition:.2s;
+}
+
+/* NÚMERO DO VERSÍCULO */
+.versiculos li::before{
+  counter-increment:verse;
+  content: counter(verse);
+  position:absolute;
+  left:0;
+  top:0;
+  font-size:.75rem;
+  color:#999;
+}
+
+/* HOVER */
+.versiculos li:hover{
+  background:rgba(0,0,0,.03);
+  border-radius:6px;
+  padding:10px 10px 10px 48px;
+}
+
+/* DARK HOVER */
+body:not(.light) .versiculos li:hover{
+  background:rgba(255,255,255,.05);
+}
+
+/* BOTÕES FLUTUANTES */
+.theme-toggle,
+.reading-toggle{
+  position:fixed;
+  right:20px;
+  border:none;
+  border-radius:50px;
+  background:#111;
+  color:#fff;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.3);
+}
+
+/* TEMA */
+.theme-toggle{
+  bottom:20px;
+  width:52px;
+  height:52px;
+  font-size:22px;
+}
+
+/* LEITURA */
+.reading-toggle{
+  bottom:85px;
+  padding:12px 18px;
+  border-radius:30px;
+}
+
+/* MODO LEITURA */
+body.reading-mode{
+  background:#07090c;
+}
+
+body.reading-mode .versiculos{
+  background:#0b0d11;
+  box-shadow:none;
+}
+
+body.reading-mode .versiculos li{
+  color:#e8e4d8;
+}
+
+body.reading-mode .versiculos li::before{
+  color:#777;
+}
+
+.book-grid{
+  list-style:none;
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap:12px;
+  padding:0;
+}
+
+
+.search{
+  display:block;
+  margin: 0 auto 24px;
+  padding: 14px 18px;
+  width:100%;
+  max-width:420px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background: var(--surface);
+  color: var(--text);
+  font-size:15px;
+  outline:none;
+  box-shadow: var(--shadow);
+  transition:.2s ease;
+}
+
+.search::placeholder{
+  color: var(--muted-text);
+}
+
+.search:focus{
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 0 0 3px rgba(100,150,255,.15);
+}
+
+
+
+/* ===== CONTINUE READING (topo) ===== */
+.continue-reading{
+  max-width:900px;
+  margin:12px auto;
+  padding:8px 12px;
+  border-radius:10px;
+  background:linear-gradient(180deg, rgba(202,168,116,0.06), rgba(202,168,116,0.02));
+  color:var(--text);
+  font-weight:600;
+  cursor:pointer;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+/* ===== VERSICLE CONTROLS (fav/copy/etc) ===== */
+.verse-controls{
+  display:inline-flex;
+  gap:6px;
+  margin-right:10px;
+  vertical-align:middle;
+}
+.verse-btn{
+  border:none;
+  background:transparent;
+  padding:4px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+  color:var(--muted-text);
+}
+.verse-btn:hover{ background:rgba(255,255,255,0.03); color:var(--text); }
+.verse-btn.active{ color:var(--accent); }
+
+/* estrela favorita à esquerda (ajuste visual) */
+.versiculos li{ display:flex; gap:10px; align-items:flex-start; }
+.versiculos li .verse-text{ flex:1; }
+
+/* botão copiar menor */
+.verse-btn.copy{ font-size:13px; }
+
+/* ===== FONT CONTROLS ===== */
+.font-controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+  margin:8px 0 18px;
+}
+.font-controls button{
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.04);
+  background:var(--surface);
+  color:var(--text);
+  padding:8px 10px;
+  cursor:pointer;
+}
+
+/* ===== SEARCH INSIDE CHAPTER ===== */
+#searchVerse{
+  max-width:420px;
+  width:100%;
+  display:block;
+  margin:8px auto 14px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.03);
+  background:var(--muted-surface);
+  color:var(--text);
+}
+
+/* ===== FAVORITE VISUAL ===== */
+.fav-dot{
+  width:18px; height:18px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:6px;
+}
+.fav-dot.active{ background: linear-gradient(90deg, rgba(202,168,116,0.18), rgba(202,168,116,0.06)); color:var(--accent); }
+
+/* ===== SMALL HELP / RECENT LIST ===== */
+.recent-list{ max-width:900px; margin:12px auto; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.recent-list button{ background:transparent; border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; color:var(--muted-text); cursor:pointer; }
+
+/* ===== RESPONSIVO ===== */
+@media (max-width:600px){
+  .verse-controls{ display:inline-flex; gap:4px; }
+  .continue-reading{ padding:8px; font-size:14px }
+}
+
+/* MODO LEITURA */
+body.reading-mode{
+  background:#0b0d0f;
+}
+
+body.reading-mode .versiculos{
+  background:#0b0d0f;
+}
+
+body.reading-mode .verse-text{
+  color:#eae6dc;
+}
+
+body.reading-mode .voltar,
+body.reading-mode h1{
+  color:#aaa;
+}
+
+/* TEMA CLARO */
+body.light{
+  background:#f4f6f8;
+  color:#222;
+}

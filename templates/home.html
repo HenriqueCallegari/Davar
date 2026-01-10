@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Bíblia Online</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="hero">
+  <h1>Bíblia Online</h1>
+  <p>Leitura simples, limpa e organizada</p>
+  <a href="/livro/{{ abbrev }}" class="btn">📖 Ver Livros</a>
+</div>
+</body>
+</html>
