@@ -1,150 +1,131 @@
-# ✝️ Bíblia Online — Flask + Python
+<div align="center">
 
-Uma aplicação web de Bíblia Online desenvolvida com **Flask**, utilizando **Python**, **HTML**, **CSS** e uma base de dados em **JSON** para armazenar os conteúdos bíblicos.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e3a8a,100:6d28d9&height=200&section=header&text=Biblia%20KJA&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Leitura%20da%20Biblia%20no%20navegador&descAlignY=60&descSize=18" alt="header" />
 
-O projeto foi criado com foco em simplicidade, organização e facilidade de leitura, oferecendo uma experiência leve e responsiva para acessar capítulos e versículos diretamente pelo navegador.
+<br />
 
----
+<a href="https://github.com/HenriqueCallegari/bibliakja/stargazers">
+  <img src="https://custom-icon-badges.demolab.com/github/stars/HenriqueCallegari/bibliakja?style=for-the-badge&logo=star&color=f1c40f&logoColor=white&labelColor=2c2f33" alt="Stars" />
+</a>
+<a href="LICENSE">
+  <img src="https://custom-icon-badges.demolab.com/badge/license-MIT-3b82f6?style=for-the-badge&logo=law&logoColor=white&labelColor=2c2f33" alt="License" />
+</a>
+<a href="https://github.com/HenriqueCallegari/bibliakja/commits/main">
+  <img src="https://custom-icon-badges.demolab.com/github/last-commit/HenriqueCallegari/bibliakja?style=for-the-badge&logo=history&color=ef4444&logoColor=white&labelColor=2c2f33" alt="Last commit" />
+</a>
 
-# 🚀 Tecnologias Utilizadas
-
-* Python
-* Flask
-* HTML5
-* CSS3
-* JSON
-
----
-
-# 📖 Funcionalidades
-
-* Visualização de livros da Bíblia
-* Navegação entre capítulos
-* Exibição de versículos
-* Estrutura organizada via JSON
-* Interface responsiva
-* Leitura simples e rápida
+</div>
 
 ---
 
-# 📂 Estrutura do Projeto
+## Sobre o projeto
+
+Um site simples pra ler a **Bíblia (versão King James Atualizada)** direto no navegador, sem precisar baixar app nem fazer cadastro.
+
+A ideia veio do uso pessoal pra **devocionais diárias** — abre a página, escolhe o livro, escolhe o capítulo, lê. Só isso.
+
+### Como funciona pra quem usa
+
+1. Abre o site → vê a lista dos 66 livros da Bíblia
+2. Clica num livro → aparecem os capítulos disponíveis
+3. Clica num capítulo → lê os versículos um após o outro
+4. Funciona no celular, tablet e computador
+
+<br />
+
+## Stack
+
+<div align="center">
+
+<a href="https://skillicons.dev">
+  <img src="https://skillicons.dev/icons?i=python,flask,html,css&theme=dark" alt="stack" />
+</a>
+
+</div>
+
+| O que | Por que |
+|---|---|
+| **Python** | Linguagem que roda por trás do site |
+| **Flask** | Framework leve pra montar páginas web em Python — perfeito pra projeto pequeno |
+| **HTML / CSS** | Estrutura e visual das páginas |
+| **JSON** | Os textos da Bíblia ficam num único arquivo organizado por livro/capítulo/versículo (parecido com uma planilha hierárquica) |
+
+<br />
+
+## Como rodar no seu computador
 
 ```bash
-biblia-online/
-│
-├── app.py
-├── requirements.txt
-├── static/
-│   ├── style.css
-│
-├── templates/
-│   ├── index.html
-│   ├── capitulo.html
-│
-├── data/
-│   ├── biblia.json
-│
-└── README.md
-```
+# 1. Baixa o projeto
+git clone https://github.com/HenriqueCallegari/bibliakja.git
+cd bibliakja
 
----
-
-# ⚙️ Como Executar
-
-## 1. Clone o repositório
-
-```bash
-git clone https://github.com/seuusuario/biblia-online.git
-```
-
----
-
-## 2. Entre na pasta
-
-```bash
-cd biblia-online
-```
-
----
-
-## 3. Crie um ambiente virtual (Opcional)
-
-```bash
+# 2. Cria um ambiente isolado (recomendado, evita conflito de pacotes)
 python -m venv venv
-```
-
-### Ativar no Windows
-
-```bash
+# Windows:
 venv\Scripts\activate
-```
+# Linux/Mac:
+source venv/bin/activate
 
----
-
-## 4. Instale as dependências
-
-```bash
+# 3. Instala as dependências
 pip install -r requirements.txt
+
+# 4. Sobe o site
+python web.py
 ```
 
----
+Abre o navegador em **http://127.0.0.1:5000** e pronto.
 
-## 5. Execute o projeto
+<br />
+
+## Estrutura
+
+```
+bibliakja/
+├── web.py              # O servidor web — responde quando alguém abre uma página
+├── main.py             # Versão de terminal (linha de comando), pra consulta rápida
+├── biblia.json         # Texto completo da Bíblia organizado
+├── requirements.txt    # Lista de pacotes Python que o projeto precisa
+├── templates/          # As páginas HTML que o usuário vê
+│   ├── livros.html         → lista de livros
+│   ├── capitulos.html      → lista de capítulos de um livro
+│   └── capitulo.html       → texto de um capítulo
+└── static/
+    └── style.css       # Visual: cores, fontes, espaçamento
+```
+
+<br />
+
+## Versão extra: terminal
+
+Tem também o `main.py` — uma versão que roda direto no terminal pra quem prefere consultar versículos rápido sem abrir navegador:
 
 ```bash
-python app.py
+python main.py
 ```
 
----
+Aí é só digitar a abreviação do livro (ex: `gn` pra Gênesis), o capítulo e o versículo.
 
-# 🌐 Acesse no navegador
+<br />
 
-```bash
-http://127.0.0.1:5000
-```
+## Autor
 
----
+<div align="center">
 
-# 📦 Exemplo de Estrutura JSON
+**Henrique Callegari**
 
-```json
-{
-  "Gênesis": {
-    "1": [
-      "No princípio criou Deus os céus e a terra.",
-      "E a terra era sem forma e vazia..."
-    ]
-  }
-}
-```
+<a href="https://github.com/HenriqueCallegari">
+  <img src="https://custom-icon-badges.demolab.com/badge/-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
+</a>
+<a href="https://www.linkedin.com/in/henrique-callegari-/">
+  <img src="https://custom-icon-badges.demolab.com/badge/-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
+</a>
 
----
+</div>
 
-# 🎯 Objetivo do Projeto
+<br />
 
-Este projeto foi desenvolvido para:
+<div align="center">
 
-* praticar Flask
-* trabalhar com rotas e templates
-* manipular arquivos JSON
-* criar aplicações web organizadas
-* aprimorar conhecimentos em frontend e backend
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6d28d9,100:1e3a8a&height=100&section=footer" alt="footer" />
 
----
-
-# 📱 Responsividade
-
-O projeto foi desenvolvido pensando em:
-
-* Desktop
-* Tablets
-* Smartphones
-
----
-
-# 👨‍💻 Desenvolvedor
-
-Desenvolvido por Henrique.
-
-GitHub:
-[https://github.com/Henriquecallegari](https://github.com/Henriquecallegari)
+</div>
