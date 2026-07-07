@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Planos de Leitura</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="plans-page">
+  <a href="/" class="voltar">← Livros</a>
+
+  <main class="plans-shell">
+    <section class="plans-hero">
+      <p class="eyebrow">Leitura diaria</p>
+      <h1>Planos de Leitura</h1>
+      <p class="hero-copy">Escolha um caminho de leitura, acompanhe seu progresso e mantenha suas anotacoes devocionais salvas automaticamente.</p>
+      <div class="top-nav" style="justify-content:flex-start; padding:0; margin-top:16px;">
+        <a href="/jogos" class="secondary-link">🎮 Jogos</a>
+        <a href="/conquistas" class="secondary-link">🏆 Conquistas</a>
+      </div>
+    </section>
+
+    <section class="plans-grid" aria-label="Planos disponiveis">
+      {% for plano in planos %}
+        <article class="plan-card">
+          <div>
+            <span class="plan-kicker">
+              {% if plano.tipo == "novo_testamento" %}
+                3 capitulos do NT
+              {% elif plano.tipo == "antigo_testamento" %}
+                3 capitulos do AT
+              {% else %}
+                Plano anual
+              {% endif %}
+            </span>
+            <h2>{{ plano.nome }}</h2>
+            <p>
+              {% if plano.tipo == "novo_testamento" %}
+                Leitura sequencial apenas do Novo Testamento, em blocos de tres capitulos por dia.
+              {% elif plano.tipo == "antigo_testamento" %}
+                Leitura sequencial apenas do Antigo Testamento, em blocos de tres capitulos por dia.
+              {% else %}
+                Segue o calendario anual: Novo Testamento nos dias uteis, LIVRE nos fins de semana e Antigo Testamento todos os dias.
+              {% endif %}
+            </p>
+          </div>
+
+          <div class="plan-progress-block">
+            <div class="progress-meta">
+              <span>{{ plano.progress.completed_chapters }} de {{ plano.progress.total_chapters }} capitulos</span>
+              <strong>{{ plano.progress.percent }}%</strong>
+            </div>
+            <div class="progress-track" aria-label="Progresso do plano">
+              <span style="width: {{ plano.progress.percent }}%"></span>
+            </div>
+          </div>
+
+          <dl class="plan-mini-stats">
+            <div>
+              <dt>Dia atual</dt>
+              <dd>{{ plano.current_day }} de {{ plano.total_dias }}</dd>
+            </div>
+            <div>
+              <dt>Sequencia</dt>
+              <dd>{{ plano.statistics.dias_consecutivos }} dias</dd>
+            </div>
+          </dl>
+
+          <div class="plan-card-actions">
+            <a href="/planos/{{ plano.id }}" class="primary-link">Continuar leitura</a>
+            <a href="/planos/{{ plano.id }}/estatisticas" class="secondary-link">Estatisticas</a>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>

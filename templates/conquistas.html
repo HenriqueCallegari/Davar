@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Conquistas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="plans-page">
+  <a href="/planos" class="voltar">← Planos</a>
+
+  <main class="stats-shell">
+    <section class="plans-hero compact-hero">
+      <p class="eyebrow">Sua jornada</p>
+      <h1>Conquistas</h1>
+      <p class="hero-copy">Você desbloqueou {{ conquistadas }} de {{ total }} conquistas. Continue lendo para colecionar todas!</p>
+    </section>
+
+    <section class="streak-banner">
+      <div class="streak-flame">🔥</div>
+      <div class="streak-info">
+        <strong>{{ streak.atual }} {{ "dia seguido" if streak.atual == 1 else "dias seguidos" }}</strong>
+        <span>Melhor sequência: {{ streak.melhor }} {{ "dia" if streak.melhor == 1 else "dias" }}</span>
+      </div>
+      <div class="streak-progress">
+        <div class="progress-meta"><span>Conquistas</span><strong>{{ percent }}%</strong></div>
+        <div class="progress-track"><span style="width: {{ percent }}%"></span></div>
+      </div>
+    </section>
+
+    <section class="achievements-grid">
+      {% for item in items %}
+        <article class="achievement-card {% if item.desbloqueado %}is-unlocked{% else %}is-locked{% endif %}">
+          <div class="achievement-icon">{{ item.icone if item.desbloqueado else "🔒" }}</div>
+          <div class="achievement-body">
+            <strong>{{ item.nome }}</strong>
+            <small>{{ item.descricao }}</small>
+          </div>
+          {% if item.desbloqueado %}<span class="achievement-check">✓</span>{% endif %}
+        </article>
+      {% endfor %}
+    </section>
+
+    <section class="plan-footer-actions">
+      <a class="secondary-link" href="/jogos">Ir para os jogos</a>
+      <a class="secondary-link" href="/planos">Voltar aos planos</a>
+    </section>
+  </main>
+</body>
+</html>

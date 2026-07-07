@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ plan.nome }} - Dia {{ day }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="plans-page" data-plan-id="{{ plan.id }}" data-day="{{ day }}">
+  <a href="/planos" class="voltar">← Planos</a>
+
+  <main class="reading-plan-shell">
+    <header class="reading-plan-header">
+      <div>
+        <p class="eyebrow">Leitura de hoje</p>
+        <h1>{{ plan.nome }}</h1>
+        <p>Dia {{ day }} de {{ plan.total_dias }}{% if calendar_label %} · {{ calendar_label }}{% endif %}</p>
+        {% if statistics.sequencia_calendario %}
+        <p class="streak-inline">🔥 {{ statistics.sequencia_calendario }} {{ "dia seguido" if statistics.sequencia_calendario == 1 else "dias seguidos" }} de leitura</p>
+        {% endif %}
+      </div>
+      <div class="completion-badge {% if progress.percent == 100 %}is-complete{% endif %}">
+        {{ "Plano concluido" if progress.percent == 100 else progress.percent ~ "% concluido" }}
+      </div>
+    </header>
+
+    <section class="today-panel">
+      <div class="day-progress">
+        <div class="progress-meta">
+          <span>Progresso geral</span>
+          <strong id="progressPercent">{{ progress.percent }}%</strong>
+        </div>
+        <div class="progress-track large" aria-label="Progresso geral">
+          <span id="progressBar" style="width: {{ progress.percent }}%"></span>
+        </div>
+      </div>
+
+      <div class="day-actions">
+        {% if day > 1 %}
+          <a class="icon-link" href="/planos/{{ plan.id }}?dia={{ day - 1 }}">← Dia anterior</a>
+        {% endif %}
+        <button id="continueReading" class="primary-link button-link" type="button" {% if not first_pending %}disabled{% endif %}>
+          Continuar leitura
+        </button>
+        {% if day < plan.total_dias %}
+          <a class="icon-link" href="/planos/{{ plan.id }}?dia={{ day + 1 }}">Proximo dia →</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="readings-layout">
+      <article class="readings-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Leituras planejadas</p>
+            <h2>Leituras do dia</h2>
+          </div>
+          <div class="time-pill">
+            <span>Tempo estimado</span>
+            <strong>{{ estimated_minutes }} min</strong>
+          </div>
+        </div>
+
+        <div class="chapter-list" id="chapterList">
+          {% if has_free_main_reading %}
+            <div class="chapter-row free-row">
+              <div class="free-dot" aria-hidden="true"></div>
+              <div class="chapter-main">
+                <strong>LIVRE</strong>
+                <small>Leitura principal do Novo Testamento</small>
+              </div>
+            </div>
+          {% endif %}
+
+          {% for chapter in chapters %}
+            <div class="chapter-row {% if chapter.concluido %}is-done{% endif %}" data-url="/livro/{{ chapter.abbrev }}/capitulo/{{ chapter.capitulo }}?plano={{ plan.id }}" data-book="{{ chapter.livro }}" data-chapter="{{ chapter.capitulo }}">
+              <label class="chapter-check">
+                <input type="checkbox" {% if chapter.concluido %}checked{% endif %} aria-label="Marcar {{ chapter.livro }} {{ chapter.capitulo }} como concluido">
+                <span></span>
+              </label>
+              <div class="chapter-main">
+                <strong>{{ chapter.livro }} {{ chapter.capitulo }}</strong>
+                <small>{{ chapter.testamento }} · {{ chapter.versiculos }} versiculos</small>
+              </div>
+              <a class="secondary-link compact" href="/livro/{{ chapter.abbrev }}/capitulo/{{ chapter.capitulo }}?plano={{ plan.id }}">Abrir</a>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="next-actions">
+          <button id="nextChapter" class="secondary-link button-link" type="button">Ir para proximo capitulo</button>
+          <span id="saveStatus" class="save-status" aria-live="polite">Tudo salvo</span>
+        </div>
+
+        <div id="dayCompleteMessage" class="day-complete {% if day_completed %}show{% endif %}">
+          Dia concluido. Que essa leitura permaneca no coracao.
+        </div>
+      </article>
+
+      <aside class="notes-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Anotacoes</p>
+            <h2>Reflexao do dia</h2>
+          </div>
+        </div>
+        <textarea id="dayNote" placeholder="Hoje Deus falou comigo sobre...">{{ note }}</textarea>
+      </aside>
+    </section>
+
+    <section class="plan-footer-actions">
+      <a class="secondary-link" href="/planos/{{ plan.id }}/estatisticas">Ver estatisticas</a>
+      <a class="secondary-link" href="/planos">Trocar plano</a>
+    </section>
+  </main>
+
+  <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const body = document.body;
+    const planId = body.dataset.planId;
+    const day = body.dataset.day;
+    const rows = Array.from(document.querySelectorAll(".chapter-row[data-book]"));
+    const saveStatus = document.getElementById("saveStatus");
+    const progressBar = document.getElementById("progressBar");
+    const progressPercent = document.getElementById("progressPercent");
+    const completeMessage = document.getElementById("dayCompleteMessage");
+    const note = document.getElementById("dayNote");
+    let saveTimer;
+
+    function setStatus(text, saved) {
+      saveStatus.textContent = text;
+      saveStatus.classList.toggle("is-saved", Boolean(saved));
+    }
+
+    const toastWrap = document.getElementById("toastWrap");
+    function showAchievement(achievement) {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = '<span class="toast-icon">' + (achievement.icone || "🏆") + '</span>' +
+        '<span class="toast-body"><strong>Conquista desbloqueada!</strong><small>' +
+        achievement.nome + '</small></span>';
+      toastWrap.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("show"));
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+      }, 4500);
+    }
+
+    function firstPendingRow() {
+      return rows.find(row => !row.classList.contains("is-done")) || rows[0];
+    }
+
+    function openRow(row) {
+      if (row && row.dataset.url) {
+        window.location.href = row.dataset.url;
+      }
+    }
+
+    document.getElementById("continueReading")?.addEventListener("click", () => {
+      openRow(firstPendingRow());
+    });
+
+    document.getElementById("nextChapter")?.addEventListener("click", () => {
+      const pending = firstPendingRow();
+      openRow(pending);
+    });
+
+    rows.forEach(row => {
+      const checkbox = row.querySelector("input[type='checkbox']");
+      checkbox.addEventListener("change", async () => {
+        row.classList.toggle("is-done", checkbox.checked);
+        setStatus("Salvando...", false);
+        try {
+          const response = await fetch(`/api/planos/${planId}/progresso`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              livro: row.dataset.book,
+              capitulo: Number(row.dataset.chapter),
+              concluido: checkbox.checked
+            })
+          });
+          if (!response.ok) throw new Error("Falha ao salvar progresso");
+          const data = await response.json();
+          progressBar.style.width = `${data.progress.percent}%`;
+          progressPercent.textContent = `${data.progress.percent}%`;
+          completeMessage.classList.toggle("show", Boolean(data.day_completed));
+          (data.new_achievements || []).forEach(showAchievement);
+          setStatus("Salvo automaticamente", true);
+        } catch (error) {
+          checkbox.checked = !checkbox.checked;
+          row.classList.toggle("is-done", checkbox.checked);
+          setStatus("Nao foi possivel salvar", false);
+        }
+      });
+    });
+
+    note.addEventListener("input", () => {
+      clearTimeout(saveTimer);
+      setStatus("Salvando anotacao...", false);
+      saveTimer = setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/planos/${planId}/dia/${day}/nota`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ texto: note.value })
+          });
+          if (!response.ok) throw new Error("Falha ao salvar anotacao");
+          setStatus("Anotacao salva automaticamente", true);
+        } catch (error) {
+          setStatus("Nao foi possivel salvar a anotacao", false);
+        }
+      }, 550);
+    });
+  });
+  </script>
+</body>
+</html>

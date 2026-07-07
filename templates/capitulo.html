@@ -32,6 +32,9 @@
 </head>
 
 <body data-name="{{ name }}" data-abbrev="{{ abbrev }}" data-chapter="{{ num }}">
+  <div id="scrollProgress" class="scroll-progress"></div>
+  <button id="pomodoro" class="pomodoro" type="button" title="Timer de leitura (Pomodoro)">⏱️ <span id="pomodoroLabel">Foco 25:00</span></button>
+  <div id="readToast" class="toast-wrap"></div>
   <div id="continueReading" class="continue-reading" role="button" aria-hidden="true"></div>
 
   <a href="/livro/{{ abbrev }}" class="voltar">← {{ name }}</a>
@@ -230,15 +233,12 @@ if (fontDown) fontDown.addEventListener('click', () => {
 const ttsBtn = document.getElementById('ttsBtn');
 const pauseTts = document.getElementById('pauseTts');
 
-let utter = null;
 let voices = [];
 let selectedVoice = null;
 
 // carrega vozes do navegador
 function loadVoices() {
   voices = speechSynthesis.getVoices();
-
-  // tenta achar a melhor voz PT-BR
   selectedVoice =
     voices.find(v => v.lang === 'pt-BR' && v.name.toLowerCase().includes('google')) ||
     voices.find(v => v.lang === 'pt-BR' && v.name.toLowerCase().includes('microsoft')) ||
@@ -246,10 +246,41 @@ function loadVoices() {
     voices.find(v => v.lang.startsWith('pt')) ||
     voices[0];
 }
-
-// alguns navegadores carregam as vozes depois
 speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
+
+const verseEls = Array.from(document.querySelectorAll('.verse-text'));
+let ttsIndex = 0;
+
+function clearHighlight() {
+  verseEls.forEach(el => el.classList.remove('tts-active'));
+}
+
+function speakFrom(index) {
+  if (index >= verseEls.length) {
+    clearHighlight();
+    ttsBtn.textContent = '🔊 Ouvir';
+    ttsIndex = 0;
+    return;
+  }
+  ttsIndex = index;
+  const el = verseEls[index];
+  const text = (el.innerText || '').trim();
+  if (!text) { speakFrom(index + 1); return; }
+
+  clearHighlight();
+  el.classList.add('tts-active');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'pt-BR';
+  if (selectedVoice) utter.voice = selectedVoice;
+  utter.rate = 0.95;
+  utter.pitch = 1.05;
+  utter.volume = 1;
+  utter.onend = () => { if (speechSynthesis.speaking || ttsBtn.textContent.includes('Tocando')) speakFrom(index + 1); };
+  speechSynthesis.speak(utter);
+}
 
 if (ttsBtn) {
   ttsBtn.addEventListener('click', () => {
@@ -257,38 +288,14 @@ if (ttsBtn) {
       alert('Leitor de voz não suportado neste navegador.');
       return;
     }
-
-    // se já estiver falando, para
-    if (speechSynthesis.speaking) {
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
       speechSynthesis.cancel();
+      clearHighlight();
       ttsBtn.textContent = '🔊 Ouvir';
       return;
     }
-
-    const text = Array.from(document.querySelectorAll('.verse-text'))
-      .map(n => n.innerText)
-      .join(' ');
-
-    if (!text) return;
-
-    utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'pt-BR';
-
-    if (selectedVoice) {
-      utter.voice = selectedVoice;
-    }
-
-    // ajustes para soar humano
-    utter.rate = 0.95;   // mais natural
-    utter.pitch = 1.05; // menos robótico
-    utter.volume = 1;
-
-    speechSynthesis.speak(utter);
     ttsBtn.textContent = '🔊 Tocando';
-
-    utter.onend = () => {
-      ttsBtn.textContent = '🔊 Ouvir';
-    };
+    speakFrom(0);
   });
 }
 
@@ -300,6 +307,115 @@ if (pauseTts) {
     } else if (speechSynthesis.paused) {
       speechSynthesis.resume();
     }
+  });
+}
+
+// ===== BARRA DE PROGRESSO DE ROLAGEM + AUTO-MARCAR =====
+const scrollBar = document.getElementById('scrollProgress');
+const readToast = document.getElementById('readToast');
+const params = new URLSearchParams(window.location.search);
+const planoId = params.get('plano');
+let autoMarked = false;
+
+function showReadToast(msg) {
+  if (!readToast) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = '<span class="toast-icon">✓</span><span class="toast-body"><strong>' + msg + '</strong></span>';
+  readToast.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3500);
+}
+
+async function autoMarkRead() {
+  if (autoMarked) return;
+  autoMarked = true;
+  const readKey = 'read_' + DATA.abbrev + '_' + DATA.chapter;
+  try { localStorage.setItem(readKey, '1'); } catch (e) {}
+  if (planoId) {
+    try {
+      await fetch('/api/planos/' + planoId + '/progresso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ livro: DATA.name, capitulo: DATA.chapter, concluido: true })
+      });
+      showReadToast('Capítulo marcado como lido');
+    } catch (e) { /* silencioso */ }
+  } else {
+    showReadToast('Capítulo concluído');
+  }
+}
+
+let hasScrolled = false;
+function updateBar() {
+  const doc = document.documentElement;
+  const scrollTop = window.scrollY || doc.scrollTop;
+  const height = doc.scrollHeight - doc.clientHeight;
+  const pct = height > 0 ? Math.min(100, (scrollTop / height) * 100) : 0;
+  if (scrollBar) scrollBar.style.width = pct + '%';
+  return { pct, scrollable: height > 40 };
+}
+window.addEventListener('scroll', () => {
+  hasScrolled = true;
+  const { pct } = updateBar();
+  if (pct >= 92) autoMarkRead();
+}, { passive: true });
+updateBar();
+// Capitulos curtos (que cabem na tela): marca como lido apos permanencia de 20s.
+setTimeout(() => {
+  if (!updateBar().scrollable && !hasScrolled) autoMarkRead();
+}, 20000);
+
+// ===== POMODORO =====
+const pomodoroBtn = document.getElementById('pomodoro');
+const pomodoroLabel = document.getElementById('pomodoroLabel');
+let pomodoroRemaining = 25 * 60;
+let pomodoroTimer = null;
+
+function fmt(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return m + ':' + s;
+}
+function renderPomodoro() {
+  if (pomodoroLabel) pomodoroLabel.textContent = 'Foco ' + fmt(pomodoroRemaining);
+}
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 660; gain.gain.value = 0.15;
+    osc.start(); osc.stop(ctx.currentTime + 0.6);
+  } catch (e) {}
+}
+if (pomodoroBtn) {
+  renderPomodoro();
+  pomodoroBtn.addEventListener('click', () => {
+    if (pomodoroTimer) {
+      clearInterval(pomodoroTimer);
+      pomodoroTimer = null;
+      pomodoroBtn.classList.remove('running');
+      pomodoroRemaining = 25 * 60;
+      renderPomodoro();
+      return;
+    }
+    pomodoroBtn.classList.add('running');
+    pomodoroTimer = setInterval(() => {
+      pomodoroRemaining--;
+      renderPomodoro();
+      if (pomodoroRemaining <= 0) {
+        clearInterval(pomodoroTimer);
+        pomodoroTimer = null;
+        pomodoroBtn.classList.remove('running');
+        pomodoroRemaining = 25 * 60;
+        renderPomodoro();
+        beep();
+        showReadToast('Sessão de foco concluída! 🎉');
+      }
+    }, 1000);
+    renderPomodoro();
   });
 }
 

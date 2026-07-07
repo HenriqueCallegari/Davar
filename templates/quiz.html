@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz de Versículos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="plans-page">
+  <a href="/jogos" class="voltar">← Jogos</a>
+
+  <main class="game-shell">
+    <section class="plans-hero compact-hero">
+      <p class="eyebrow">Quiz</p>
+      <h1>De qual livro é?</h1>
+    </section>
+
+    <div class="quiz-scorebar">
+      <div><span>Pergunta</span><strong id="qIndex">–</strong></div>
+      <div><span>Acertos</span><strong id="qScore">0</strong></div>
+      <div><span>Sequência</span><strong id="qStreak">0</strong></div>
+      <div><span>Recorde</span><strong id="qBest">0</strong></div>
+    </div>
+
+    <article class="quiz-card">
+      <p class="quiz-verse" id="verseText">Carregando…</p>
+      <p class="quiz-reference" id="verseRef"></p>
+      <div class="quiz-options" id="options"></div>
+      <div class="quiz-actions">
+        <button id="nextBtn" class="primary-link button-link" type="button" disabled>Próxima →</button>
+        <span id="quizFeedback" class="save-status" aria-live="polite"></span>
+      </div>
+    </article>
+
+    <div class="quiz-end" id="quizEnd" hidden>
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <button id="restartBtn" class="primary-link button-link" type="button">Jogar de novo</button>
+    </div>
+  </main>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const BEST_KEY = "quiz_best_streak";
+    const els = {
+      verse: document.getElementById("verseText"),
+      ref: document.getElementById("verseRef"),
+      options: document.getElementById("options"),
+      next: document.getElementById("nextBtn"),
+      feedback: document.getElementById("quizFeedback"),
+      qIndex: document.getElementById("qIndex"),
+      score: document.getElementById("qScore"),
+      streak: document.getElementById("qStreak"),
+      best: document.getElementById("qBest"),
+      card: document.querySelector(".quiz-card"),
+      end: document.getElementById("quizEnd"),
+      endTitle: document.getElementById("endTitle"),
+      endText: document.getElementById("endText"),
+      restart: document.getElementById("restartBtn"),
+    };
+
+    let perguntas = [];
+    let atual = 0;
+    let score = 0;
+    let streak = 0;
+    let best = Number(localStorage.getItem(BEST_KEY) || 0);
+    let answered = false;
+    els.best.textContent = best;
+
+    async function carregar() {
+      els.verse.textContent = "Carregando…";
+      els.options.innerHTML = "";
+      try {
+        const res = await fetch("/api/quiz?q=10");
+        const data = await res.json();
+        perguntas = data.perguntas || [];
+      } catch (e) {
+        els.verse.textContent = "Não foi possível carregar as perguntas.";
+        return;
+      }
+      atual = 0; score = 0; streak = 0;
+      els.score.textContent = "0";
+      els.streak.textContent = "0";
+      els.end.hidden = true;
+      els.card.hidden = false;
+      mostrar();
+    }
+
+    function mostrar() {
+      answered = false;
+      const p = perguntas[atual];
+      els.qIndex.textContent = (atual + 1) + "/" + perguntas.length;
+      els.verse.textContent = "“" + p.texto + "”";
+      els.ref.textContent = "";
+      els.ref.classList.remove("show");
+      els.feedback.textContent = "";
+      els.feedback.classList.remove("is-saved");
+      els.next.disabled = true;
+      els.options.innerHTML = "";
+      p.opcoes.forEach(nome => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option";
+        btn.type = "button";
+        btn.textContent = nome;
+        btn.addEventListener("click", () => responder(btn, nome, p));
+        els.options.appendChild(btn);
+      });
+    }
+
+    function responder(btn, escolha, p) {
+      if (answered) return;
+      answered = true;
+      const acertou = escolha === p.correta;
+      Array.from(els.options.children).forEach(b => {
+        b.disabled = true;
+        if (b.textContent === p.correta) b.classList.add("correct");
+        else if (b === btn) b.classList.add("wrong");
+      });
+      if (acertou) {
+        score++; streak++;
+        els.feedback.textContent = "Acertou! 🎉";
+        els.feedback.classList.add("is-saved");
+      } else {
+        streak = 0;
+        els.feedback.textContent = "Era " + p.correta + ".";
+      }
+      if (streak > best) { best = streak; try { localStorage.setItem(BEST_KEY, best); } catch(e){} }
+      els.score.textContent = score;
+      els.streak.textContent = streak;
+      els.best.textContent = best;
+      els.ref.textContent = p.referencia;
+      els.ref.classList.add("show");
+      els.next.disabled = false;
+    }
+
+    els.next.addEventListener("click", () => {
+      atual++;
+      if (atual >= perguntas.length) finalizar();
+      else mostrar();
+    });
+
+    function finalizar() {
+      els.card.hidden = true;
+      els.end.hidden = false;
+      const pct = Math.round((score / perguntas.length) * 100);
+      els.endTitle.textContent = score + "/" + perguntas.length + " acertos (" + pct + "%)";
+      els.endText.textContent =
+        pct === 100 ? "Perfeito! Você conhece bem as Escrituras. 👑" :
+        pct >= 70 ? "Muito bom! Continue assim. 🙌" :
+        pct >= 40 ? "Bom começo — a leitura diária vai te ajudar. 📖" :
+        "Não desanime! Cada leitura aumenta seu conhecimento. 🌱";
+    }
+
+    els.restart.addEventListener("click", carregar);
+    carregar();
+  });
+  </script>
+</body>
+</html>
