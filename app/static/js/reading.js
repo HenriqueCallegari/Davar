@@ -45,7 +45,8 @@
       abbrev: ABBREV, capitulo: CHAPTER, versiculo: Number(li.dataset.verse)
     }).then(function (res) {
       li.classList.toggle("is-fav", res.favorito);
-      btn.textContent = res.favorito ? "★" : "☆";
+      var star = btn.querySelector(".fav-star");
+      if (star) star.textContent = res.favorito ? "★" : "☆";
     }).catch(function () { window.showToast("Erro ao favoritar", ""); });
   });
 

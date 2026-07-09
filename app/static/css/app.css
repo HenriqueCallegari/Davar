@@ -284,11 +284,24 @@ img, svg { max-width: 100%; }
 .verse__num { flex: 0 0 auto; font-family: var(--font-ui); font-size: var(--step--1); font-weight: 700; color: var(--text-faint); min-width: 1.6rem; text-align: right; padding-top: .25rem; }
 .verse__body { flex: 1; }
 .verse__text { font-size: var(--step-1); line-height: 1.75; }
-.verse__actions { display: flex; gap: .2rem; margin-top: .3rem; opacity: 0; transition: opacity var(--tr); }
+.verse__actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; opacity: .8; transition: opacity var(--tr); }
 .verse:hover .verse__actions, .verse.is-open .verse__actions { opacity: 1; }
-.verse__actions button { border: 0; background: transparent; cursor: pointer; color: var(--text-faint);
-  font-size: .95rem; padding: .25rem .4rem; border-radius: var(--radius-sm); }
-.verse__actions button:hover { background: var(--surface-hi); color: var(--text); }
+.verse-act {
+  display: inline-flex; align-items: center; gap: .35rem; cursor: pointer;
+  font-family: var(--font-ui); font-size: var(--step--1); font-weight: 600; color: var(--text-soft);
+  background: var(--surface-hi); border: 1px solid var(--line); border-radius: var(--radius-pill);
+  padding: .32rem .7rem; transition: background var(--tr), border-color var(--tr), color var(--tr), transform var(--tr);
+}
+.verse-act svg { width: 15px; height: 15px; }
+.verse-act:hover { color: var(--text); border-color: var(--accent); transform: translateY(-1px); }
+.verse-act:active { transform: translateY(0); }
+.verse.is-open .mark-btn { background: var(--accent); color: #241c0d; border-color: transparent; }
+.fav-star { font-size: 1rem; line-height: 1; }
+.verse.is-fav .fav-btn { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.verse.is-fav .fav-star { color: var(--accent); }
+/* Em telas de toque (sem hover), os botoes ficam sempre 100% visiveis */
+@media (hover: none) { .verse__actions { opacity: 1; } }
+@media (max-width: 560px) { .verse-act__label { display: none; } .verse-act { padding: .5rem .6rem; } }
 .verse.tts-active { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 
 /* grifos */
