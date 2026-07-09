@@ -44,6 +44,14 @@ class Config:
     AUTH_DB = Path(os.environ.get("AUTH_DB", INSTANCE_DIR / "auth.sqlite3"))
     USERS_DIR = Path(os.environ.get("USERS_DIR", INSTANCE_DIR / "users"))
 
+    # Turso (persistencia na nuvem). Se ausente, roda 100% local (efemero no free).
+    TURSO_DATABASE_URL = os.environ.get("TURSO_DATABASE_URL", "")
+    TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "")
+
+    @classmethod
+    def turso_enabled(cls) -> bool:
+        return bool(cls.TURSO_DATABASE_URL and cls.TURSO_AUTH_TOKEN)
+
     # Regras de negocio
     ANNUAL_PLAN_YEAR = int(os.environ.get("ANNUAL_PLAN_YEAR", "2026"))
     VERSES_PER_MINUTE = 4.8  # ritmo medio de leitura para estimar tempo

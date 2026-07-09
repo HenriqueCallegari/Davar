@@ -24,10 +24,11 @@ def current_user_id() -> int | None:
 
 
 def current_user() -> dict[str, Any] | None:
+    """Vem da sessao (sem consultar o banco a cada request)."""
     uid = current_user_id()
     if uid is None:
         return None
-    return current_app.services.auth.get_user(uid)
+    return {"id": uid, "nome": session.get("user_nome", "")}
 
 
 def current_plans():

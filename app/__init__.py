@@ -13,8 +13,9 @@ from app.auth.repository import AuthRepository
 from app.bible.library import BibleLibrary
 from app.bible.repository import BibleRepository
 from app.config import Config
-from app.core.auth import current_user
+from app.core.auth import current_user, current_user_id
 from app.core.text import markdown_to_html
+from app.core.turso import TursoClient
 from app.core.user_data import UserDataManager
 from app.core.version import current_version_id
 from app.study.themes import ThemeService
@@ -42,14 +43,18 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     app.config.from_object(config_object)
     config_object.ensure_dirs()
 
+    turso = None
+    if config_object.turso_enabled():
+        turso = TursoClient(config_object.TURSO_DATABASE_URL, config_object.TURSO_AUTH_TOKEN)
+
     library = BibleLibrary(config_object.BIBLE_VERSIONS)
     bible = library.default
     app.services = Services(
         library=library,
         bible=bible,
         themes=ThemeService(bible, config_object.THEMES_PATH),
-        auth=AuthRepository(config_object.AUTH_DB),
-        user_data=UserDataManager(bible, config_object.USERS_DIR),
+        auth=AuthRepository(sqlite_path=config_object.AUTH_DB, turso=turso),
+        user_data=UserDataManager(bible, config_object.USERS_DIR, turso=turso),
     )
 
     app.jinja_env.filters["markdown"] = markdown_to_html
@@ -79,6 +84,18 @@ def _register_shared(app: Flask) -> None:
         if session.get("user_id") is None:
             return redirect(url_for("auth.login", next=request.path))
         return None
+
+    @app.after_request
+    def sync_after_write(response):
+        # Backup assincrono no Turso apos escritas bem-sucedidas do usuario.
+        try:
+            uid = current_user_id()
+            if (uid is not None and request.method in ("POST", "DELETE")
+                    and request.path.startswith("/api/") and response.status_code < 400):
+                app.services.user_data.schedule_backup(uid)
+        except Exception:
+            pass
+        return response
 
     @app.context_processor
     def inject_user() -> dict:
