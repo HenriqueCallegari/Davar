@@ -22,6 +22,11 @@ def normalize(text: str) -> str:
     return without_accents.lower()
 
 
+def load_bible_json(path: Path) -> list[dict[str, Any]]:
+    with open(path, "r", encoding="utf-8-sig") as handle:
+        return json.load(handle)
+
+
 @dataclass(frozen=True)
 class VerseRef:
     abbrev: str
@@ -33,13 +38,16 @@ class VerseRef:
 
 
 class BibleRepository:
-    """Fonte unica de verdade para o texto biblico."""
+    """Fonte unica de verdade para o texto de UMA versao biblica."""
 
-    def __init__(self, bible_path: Path) -> None:
-        with open(bible_path, "r", encoding="utf-8-sig") as handle:
-            self._books: list[dict[str, Any]] = json.load(handle)
+    def __init__(self, books: list[dict[str, Any]]) -> None:
+        self._books = books
         self._by_abbrev = {book["abbrev"].lower(): book for book in self._books}
         self._index: list[VerseRef] = self._build_index()
+
+    @classmethod
+    def from_path(cls, path: Path) -> "BibleRepository":
+        return cls(load_bible_json(path))
 
     # ---- catalogo -----------------------------------------------------
     @property

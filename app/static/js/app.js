@@ -42,6 +42,14 @@
     });
   };
 
+  // ----- Troca de versão bíblica -----
+  document.querySelectorAll("[data-version-switch]").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      var next = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = "/versao/" + sel.value + "?next=" + next;
+    });
+  });
+
   // ----- PWA (instalável / base offline) -----
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

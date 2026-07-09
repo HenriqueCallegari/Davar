@@ -9,9 +9,11 @@ from dataclasses import dataclass
 
 from flask import Flask, render_template
 
+from app.bible.library import BibleLibrary
 from app.bible.repository import BibleRepository
 from app.config import Config
 from app.core.text import markdown_to_html
+from app.core.version import current_version_id
 from app.plans.repository import ReadingPlanRepository
 from app.study.repository import StudyRepository
 from app.study.themes import ThemeService
@@ -21,7 +23,8 @@ from app.study.themes import ThemeService
 class Services:
     """Container de dependencias compartilhadas (injecao simples)."""
 
-    bible: BibleRepository
+    library: BibleLibrary
+    bible: BibleRepository  # versao padrao (canon), usada por estudo/temas/quiz
     plans: ReadingPlanRepository
     study: StudyRepository
     themes: ThemeService
@@ -32,8 +35,10 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     app.config.from_object(config_object)
     config_object.ensure_dirs()
 
-    bible = BibleRepository(config_object.BIBLE_PATH)
+    library = BibleLibrary(config_object.BIBLE_VERSIONS)
+    bible = library.default
     app.services = Services(
+        library=library,
         bible=bible,
         plans=ReadingPlanRepository(bible.books, config_object.DATABASE_PATH),
         study=StudyRepository(bible, config_object.DATABASE_PATH),
@@ -58,6 +63,13 @@ def _register_blueprints(app: Flask) -> None:
 
 
 def _register_shared(app: Flask) -> None:
+    @app.context_processor
+    def inject_versions() -> dict:
+        return {
+            "bible_versions": app.services.library.versions,
+            "current_version": current_version_id(),
+        }
+
     @app.context_processor
     def inject_nav() -> dict:
         return {

@@ -23,6 +23,15 @@ class Config:
     THEMES_PATH = Path(os.environ.get("THEMES_PATH", DATA_DIR / "themes.json"))
     DEVOTIONALS_PATH = Path(os.environ.get("DEVOTIONALS_PATH", DATA_DIR / "devocionais.json"))
 
+    # Versoes biblicas disponiveis. A primeira com default=True define o canon.
+    BIBLE_VERSIONS = [
+        {"id": "kja", "nome": "King James Atualizada", "sigla": "KJA",
+         "path": DATA_DIR / "biblia.json", "default": True},
+        {"id": "ntlh", "nome": "Nova Traducao na Linguagem de Hoje", "sigla": "NTLH",
+         "path": DATA_DIR / "ntlh.json"},
+    ]
+    VERSION_COOKIE = "kja_version"
+
     # Banco de dados de progresso/estudo. Mantem compatibilidade com a env antiga.
     DATABASE_PATH = Path(
         os.environ.get(

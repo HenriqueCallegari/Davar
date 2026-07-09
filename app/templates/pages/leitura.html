@@ -15,6 +15,13 @@
   <button id="ttsBtn" class="btn btn--soft" title="Ouvir">🔊 Ouvir</button>
   <button id="ttsPause" class="btn btn--soft" title="Pausar/continuar">⏸️</button>
   <button id="focusBtn" class="btn btn--soft" title="Modo foco">📖 Foco</button>
+  {% if bible_versions|length > 1 %}
+    <select class="version-select" data-version-switch aria-label="Versão da Bíblia" title="Versão">
+      {% for v in bible_versions %}
+        <option value="{{ v.id }}" {{ 'selected' if v.id == current_version }}>{{ v.sigla }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
 </div>
 
 <ol class="verses" id="verses"

@@ -1,20 +1,47 @@
-"""Rotas do texto biblico: catalogo, leitura e busca global."""
+"""Rotas do texto biblico: catalogo, leitura, busca global e troca de versao."""
 from __future__ import annotations
 
-from flask import Blueprint, current_app, render_template, request
+from urllib.parse import urlparse
+
+from flask import Blueprint, current_app, make_response, redirect, render_template, request, url_for
+
+from app.config import Config
+from app.core.version import current_bible
 
 bp = Blueprint("bible", __name__)
 
 
+def _safe_next(default_endpoint: str = "dashboard.home") -> str:
+    """Evita open-redirect: so aceita caminhos internos."""
+    target = request.args.get("next", "")
+    parsed = urlparse(target)
+    if target and not parsed.netloc and not parsed.scheme and target.startswith("/"):
+        return target
+    return url_for(default_endpoint)
+
+
+@bp.route("/versao/<version_id>")
+def trocar_versao(version_id: str):
+    library = current_app.services.library
+    destino = _safe_next()
+    response = make_response(redirect(destino))
+    if library.has(version_id):
+        response.set_cookie(
+            Config.VERSION_COOKIE, version_id,
+            max_age=60 * 60 * 24 * 365, samesite="Lax",
+        )
+    return response
+
+
 @bp.route("/livros")
 def livros():
-    bible = current_app.services.bible
+    bible = current_bible()
     return render_template("pages/livros.html", livros=bible.book_summaries())
 
 
 @bp.route("/livro/<abbrev>")
 def capitulos(abbrev: str):
-    bible = current_app.services.bible
+    bible = current_bible()
     book = bible.get_book(abbrev)
     if not book:
         return render_template("pages/error.html", code=404,
@@ -29,7 +56,7 @@ def capitulos(abbrev: str):
 
 @bp.route("/livro/<abbrev>/capitulo/<int:num>")
 def capitulo(abbrev: str, num: int):
-    bible = current_app.services.bible
+    bible = current_bible()
     study = current_app.services.study
     book = bible.get_book(abbrev)
     if not book:
@@ -65,7 +92,7 @@ def capitulo(abbrev: str, num: int):
 
 @bp.route("/buscar")
 def buscar():
-    bible = current_app.services.bible
+    bible = current_bible()
     query = (request.args.get("q") or "").strip()
     testament = request.args.get("testamento") or None
     abbrev = request.args.get("livro") or None

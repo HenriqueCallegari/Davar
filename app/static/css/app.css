@@ -516,3 +516,11 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* ---------- SELETOR DE VERSÃO ---------- */
+.version-select {
+  border: 1px solid var(--line-strong); background: var(--surface-hi); color: var(--text);
+  border-radius: var(--radius-sm); padding: .55rem .7rem; font: 700 var(--step--1) var(--font-ui);
+  cursor: pointer;
+}
+.version-select:focus-visible { box-shadow: var(--ring); outline: none; }

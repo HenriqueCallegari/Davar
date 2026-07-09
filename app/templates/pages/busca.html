@@ -20,6 +20,13 @@
       <option value="{{ l.abbrev }}" {{ 'selected' if livro == l.abbrev }}>{{ l.name }}</option>
     {% endfor %}
   </select>
+  {% if bible_versions|length > 1 %}
+    <select class="version-select" data-version-switch aria-label="Versão da Bíblia" title="Versão">
+      {% for v in bible_versions %}
+        <option value="{{ v.id }}" {{ 'selected' if v.id == current_version }}>{{ v.sigla }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
   <button class="btn btn--primary" type="submit">Buscar</button>
 </form>
 
