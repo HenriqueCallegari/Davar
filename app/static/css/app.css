@@ -524,3 +524,34 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
   cursor: pointer;
 }
 .version-select:focus-visible { box-shadow: var(--ring); outline: none; }
+
+/* ---------- RODAPÉ (barra Sobre / redes) ---------- */
+.footer-bar { display: flex; gap: .6rem; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: var(--sp-2); }
+.footer-bar a { color: var(--text-soft); text-decoration: none; font-weight: 600; }
+.footer-bar a:hover { color: var(--accent); }
+.footer-bar span { color: var(--text-faint); }
+
+/* ---------- SOBRE ---------- */
+.about { max-width: 720px; margin: 0 auto; }
+.about-card { padding: var(--sp-6); }
+.about-card p { color: var(--text-soft); line-height: 1.8; margin-bottom: var(--sp-3); }
+.about-verse { font-family: var(--font-serif); font-size: var(--step-1); line-height: 1.6; color: var(--text);
+  border-left: 3px solid var(--accent); padding-left: var(--sp-4); margin: var(--sp-5) 0; }
+.about-verse cite { display: block; margin-top: var(--sp-2); color: var(--accent); font-style: normal; font-weight: 700; font-size: var(--step-0); }
+.about-dev { font-weight: 800; color: var(--text); margin-top: var(--sp-5); }
+.about-links { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-3); }
+
+/* ---------- PLAYER DE MÚSICA ---------- */
+.music-player { position: fixed; right: 16px; bottom: 16px; z-index: 55;
+  display: flex; align-items: center; gap: .55rem;
+  background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--radius-pill);
+  padding: .4rem .7rem .4rem .45rem; box-shadow: var(--shadow-sm); }
+.music-player.playing { border-color: var(--accent); }
+.music-btn { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--accent); color: #241c0d; font-size: 1rem; display: grid; place-items: center; }
+.music-btn:hover { background: var(--accent-strong); }
+.music-volume { width: 84px; accent-color: var(--accent); cursor: pointer; }
+@media (max-width: 560px) {
+  .music-player { padding: .35rem .5rem; gap: .4rem; }
+  .music-volume { width: 60px; }
+}

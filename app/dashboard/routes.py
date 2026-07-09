@@ -35,3 +35,9 @@ def home():
 def crescimento():
     dados = current_app.services.plans.growth_data()
     return render_template("pages/crescimento.html", dados=dados)
+
+
+@bp.route("/sobre")
+def sobre():
+    joao316 = current_app.services.bible.verse_text("jo", 3, 16)
+    return render_template("pages/sobre.html", joao316=joao316)

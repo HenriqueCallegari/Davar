@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e3a8a,100:6d28d9&height=200&section=header&text=Biblia%20KJA&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Leitura%20da%20Biblia%20no%20navegador&descAlignY=60&descSize=18" alt="header" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e3a8a,100:6d28d9&height=200&section=header&text=Devar%20Adonai&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Leitura%20e%20estudo%20b%C3%ADblico%20no%20navegador&descAlignY=60&descSize=18" alt="header" />
 
 <br />
 
@@ -20,7 +20,7 @@
 
 ## Sobre o projeto
 
-Uma **plataforma de leitura e estudo bíblico** (versão King James Atualizada) que roda no navegador, sem cadastro. Começou como um leitor simples e evoluiu para uma experiência completa: leitura premium, ferramentas de estudo, planos, gamificação e acompanhamento de crescimento.
+**Devar Adonai** ("Palavra do Senhor") é uma **plataforma de leitura e estudo bíblico** que roda no navegador, sem cadastro e **sem fins lucrativos**. Traz as versões **KJA** e **NTLH** (com troca fácil), música de fundo para momentos de devoção, e evoluiu de um leitor simples para uma experiência completa: leitura premium, ferramentas de estudo, planos, gamificação e acompanhamento de crescimento.
 
 ### O que dá pra fazer
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1417">
   <meta name="description" content="Plataforma de leitura e estudo bíblico — planos, grifos, anotações, temas e progresso.">
-  <title>{% block title %}Bíblia KJA{% endblock %}</title>
+  <title>{% block title %}Devar Adonai{% endblock %}</title>
   <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}" type="image/svg+xml">
   <link rel="manifest" href="{{ url_for('dashboard.manifest') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
@@ -27,7 +27,7 @@
     <div class="app-header__inner">
       <a href="{{ url_for('dashboard.home') }}" class="brand" aria-label="Início">
         <span class="brand__mark">✦</span>
-        <span class="brand__name">Bíblia<strong>KJA</strong></span>
+        <span class="brand__name">Devar <strong>Adonai</strong></span>
       </a>
 
       <form class="header-search" action="{{ url_for('bible.buscar') }}" method="get" role="search">
@@ -57,12 +57,26 @@
   </main>
 
   <footer class="app-footer">
-    <p>Bíblia KJA · leitura, estudo e crescimento.</p>
+    <nav class="footer-bar" aria-label="Rodapé">
+      <a href="{{ url_for('dashboard.sobre') }}">Sobre</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/HenriqueCallegari" target="_blank" rel="noopener">GitHub</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://www.linkedin.com/in/henrique-callegari-/" target="_blank" rel="noopener">LinkedIn</a>
+    </nav>
+    <p>Devar Adonai · leitura, estudo e crescimento · sem fins lucrativos.</p>
   </footer>
+
+  <div id="musicPlayer" class="music-player" title="Música de fundo">
+    <button id="musicToggle" class="music-btn" type="button" aria-label="Tocar ou pausar música de fundo">▶</button>
+    <input id="musicVolume" class="music-volume" type="range" min="0" max="100" value="40" aria-label="Volume da música">
+    <audio id="bgMusic" loop preload="none" src="{{ url_for('static', filename='audio/soaking-worship.mp3') }}"></audio>
+  </div>
 
   <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
 
   <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/player.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

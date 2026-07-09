@@ -1,9 +1,10 @@
 /* Service worker mínimo — app shell (cache-first para estáticos).
    Base para modo offline completo (ver ROADMAP). */
-const CACHE = "kja-v1";
+const CACHE = "kja-v2";
 const ASSETS = [
   "/static/css/app.css",
   "/static/js/app.js",
+  "/static/js/player.js",
   "/static/icons/favicon.svg"
 ];
 
@@ -22,11 +23,14 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
+  var path = new URL(req.url).pathname;
+  // Nunca cachear áudio (respostas parciais 206 não podem ir para o Cache API).
+  if (path.indexOf("/static/audio/") === 0 || path.indexOf("/audio/") !== -1) return;
   e.respondWith(
     caches.match(req).then(function (hit) {
       return hit || fetch(req).then(function (res) {
         try {
-          if (res.ok && new URL(req.url).pathname.indexOf("/static/") === 0) {
+          if (res.status === 200 && path.indexOf("/static/") === 0) {
             var copy = res.clone();
             caches.open(CACHE).then(function (c) { c.put(req, copy); });
           }
