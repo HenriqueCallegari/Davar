@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Bíblia — Livros{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Escrituras</p>
+  <h1>Livros da Bíblia</h1>
+  <p>Toque em um livro para navegar pelos capítulos. Use a busca para encontrar qualquer palavra ou versículo.</p>
+</div>
+
+<input type="text" id="busca" class="tool-input" placeholder="Filtrar livro por nome…" aria-label="Filtrar livro">
+
+{% set testamentos = ['Antigo Testamento', 'Novo Testamento'] %}
+{% for t in testamentos %}
+  <span class="testament-tag">{{ t }}</span>
+  <ul class="book-grid" data-testament>
+    {% for l in livros if l.testament == t %}
+      <li>
+        <a href="{{ url_for('bible.capitulos', abbrev=l.abbrev) }}" class="book-card" data-name="{{ l.name|lower }}">
+          <span class="book-badge">{{ l.abbrev }}</span>
+          <span class="book-title">{{ l.name }}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endfor %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+  var input = document.getElementById("busca");
+  input.addEventListener("input", function () {
+    var termo = input.value.toLowerCase();
+    document.querySelectorAll(".book-grid li").forEach(function (li) {
+      var card = li.querySelector(".book-card");
+      li.style.display = card.dataset.name.includes(termo) ? "" : "none";
+    });
+  });
+</script>
+{% endblock %}

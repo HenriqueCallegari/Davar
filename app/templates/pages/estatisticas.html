@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Estatísticas — {{ plan.nome }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('plans.mostrar_plano', plano_id=plan.id) }}">← Voltar ao plano</a>
+<div class="page-head">
+  <p class="eyebrow">Acompanhamento</p>
+  <h1>Estatísticas</h1>
+  <p>{{ plan.nome }} · Dia {{ current_day }} de {{ plan.total_dias }}</p>
+</div>
+
+<section class="card card--pad" style="margin-bottom:var(--sp-4)">
+  <div class="progress-meta"><span>Porcentagem do plano</span><strong style="font-size:var(--step-2)">{{ progress.percent }}%</strong></div>
+  <div class="progress-track lg"><span style="width: {{ progress.percent }}%"></span></div>
+</section>
+
+<div class="stats-grid">
+  <article class="card stat-card"><span>Sequência atual 🔥</span><strong>{{ statistics.sequencia_calendario }}</strong></article>
+  <article class="card stat-card"><span>Maior sequência</span><strong>{{ statistics.melhor_sequencia_calendario }}</strong></article>
+  <article class="card stat-card"><span>Capítulos lidos</span><strong>{{ statistics.capitulos_lidos }}</strong></article>
+  <article class="card stat-card"><span>Versículos lidos</span><strong>{{ statistics.versiculos_lidos }}</strong></article>
+  <article class="card stat-card"><span>Tempo de leitura</span><strong>{{ statistics.tempo_total_lido }} min</strong></article>
+  <article class="card stat-card"><span>Capítulos restantes</span><strong>{{ statistics.capitulos_restantes }}</strong></article>
+  <article class="card stat-card"><span>Previsão de conclusão</span><strong style="font-size:var(--step-1)">{{ statistics.data_prevista_conclusao }}</strong></article>
+  <article class="card stat-card"><span>Total do plano</span><strong>{{ progress.total_chapters }}</strong></article>
+</div>
+{% endblock %}

@@ -20,16 +20,18 @@
 
 ## Sobre o projeto
 
-Um site simples pra ler a **Bíblia (versão King James Atualizada)** direto no navegador, sem precisar baixar app nem fazer cadastro.
+Uma **plataforma de leitura e estudo bíblico** (versão King James Atualizada) que roda no navegador, sem cadastro. Começou como um leitor simples e evoluiu para uma experiência completa: leitura premium, ferramentas de estudo, planos, gamificação e acompanhamento de crescimento.
 
-A ideia veio do uso pessoal pra **devocionais diárias** — abre a página, escolhe o livro, escolhe o capítulo, lê. Só isso.
+### O que dá pra fazer
 
-### Como funciona pra quem usa
-
-1. Abre o site → vê a lista dos 66 livros da Bíblia
-2. Clica num livro → aparecem os capítulos disponíveis
-3. Clica num capítulo → lê os versículos um após o outro
-4. Funciona no celular, tablet e computador
+- 📖 **Ler** os 66 livros com tipografia cuidada, tema claro/escuro, modo foco, fonte ajustável e leitura em voz alta (com destaque do versículo).
+- 🖊️ **Estudar** — grifar versículos em 5 cores (cada uma com um significado), anotar em markdown com tags, favoritar e organizar em coleções.
+- 🔍 **Buscar** qualquer palavra ou frase em toda a Bíblia (ignora acento e maiúsculas).
+- 🏷️ **Temas** — 14 temas que reúnem versículos automaticamente (fé, ansiedade, perdão…).
+- 🗓️ **Planos de leitura** com progresso, anotações e estatísticas.
+- 🔥 **Gamificação** — sequência de dias, 10 conquistas, quiz de versículos e jogo de ordenar os livros.
+- 📈 **Crescimento** — dashboard, heatmap de consistência e gráficos de evolução.
+- 📲 **PWA** — instalável no celular.
 
 <br />
 
@@ -38,17 +40,18 @@ A ideia veio do uso pessoal pra **devocionais diárias** — abre a página, esc
 <div align="center">
 
 <a href="https://skillicons.dev">
-  <img src="https://skillicons.dev/icons?i=python,flask,html,css&theme=dark" alt="stack" />
+  <img src="https://skillicons.dev/icons?i=python,flask,sqlite,html,css,js&theme=dark" alt="stack" />
 </a>
 
 </div>
 
 | O que | Por que |
 |---|---|
-| **Python** | Linguagem que roda por trás do site |
-| **Flask** | Framework leve pra montar páginas web em Python — perfeito pra projeto pequeno |
-| **HTML / CSS** | Estrutura e visual das páginas |
-| **JSON** | Os textos da Bíblia ficam num único arquivo organizado por livro/capítulo/versículo (parecido com uma planilha hierárquica) |
+| **Python + Flask** | Backend em *application factory* com blueprints por domínio |
+| **SQLite** | Progresso, grifos, anotações e coleções persistidos |
+| **HTML / CSS / JS** | Design system próprio (tokens, claro/escuro), sem frameworks de front |
+| **JSON** | Texto bíblico e índice temático como dados estáticos |
+| **PWA** | Manifest + service worker (instalável, base offline) |
 
 <br />
 
@@ -81,29 +84,27 @@ Abre o navegador em **http://127.0.0.1:5000** e pronto.
 
 ```
 bibliakja/
-├── web.py              # O servidor web — responde quando alguém abre uma página
-├── main.py             # Versão de terminal (linha de comando), pra consulta rápida
-├── biblia.json         # Texto completo da Bíblia organizado
-├── requirements.txt    # Lista de pacotes Python que o projeto precisa
-├── templates/          # As páginas HTML que o usuário vê
-│   ├── livros.html         → lista de livros
-│   ├── capitulos.html      → lista de capítulos de um livro
-│   └── capitulo.html       → texto de um capítulo
-└── static/
-    └── style.css       # Visual: cores, fontes, espaçamento
+├── web.py                 # entrypoint WSGI (gunicorn web:app)
+├── app/                   # aplicação (factory + blueprints por domínio)
+│   ├── __init__.py            → create_app, injeção de dependências
+│   ├── config.py              → configuração central
+│   ├── core/                  → utilidades (markdown seguro…)
+│   ├── bible/                 → catálogo, leitura e busca
+│   ├── plans/                 → planos, progresso, conquistas
+│   ├── study/                 → grifos, notas, coleções, temas
+│   ├── gamification/          → quiz e jogos
+│   ├── dashboard/             → dashboard, crescimento, PWA
+│   ├── templates/             → base.html + pages/
+│   └── static/                → css/ js/ icons/ + manifest/sw
+├── data/                  # biblia.json, themes.json
+├── instance/              # banco SQLite (gerado)
+├── requirements.txt
+├── Procfile · runtime.txt
+└── ROADMAP.md             # status e próximos módulos
 ```
 
-<br />
-
-## Versão extra: terminal
-
-Tem também o `main.py` — uma versão que roda direto no terminal pra quem prefere consultar versículos rápido sem abrir navegador:
-
-```bash
-python main.py
-```
-
-Aí é só digitar a abreviação do livro (ex: `gn` pra Gênesis), o capítulo e o versículo.
+A arquitetura segue *application factory* + *blueprints*, com repositórios como
+única fonte de acesso a dados. Detalhes e próximos passos em [ROADMAP.md](ROADMAP.md).
 
 <br />
 

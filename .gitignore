@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 reading_plans.sqlite3
 .claude/
+instance/
+*.sqlite3
+.venv/

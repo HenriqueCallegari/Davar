@@ -1,0 +1,45 @@
+"""Configuracao central da aplicacao.
+
+Mantem todos os caminhos e ajustes num unico lugar, facilitando deploy,
+testes e futura migracao para banco em nuvem / multiplos ambientes.
+"""
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+INSTANCE_DIR = BASE_DIR / "instance"
+
+
+class Config:
+    """Configuracao base (producao por padrao)."""
+
+    SECRET_KEY = os.environ.get("SECRET_KEY", "bibliakja-dev-key")
+
+    # Dados estaticos
+    BIBLE_PATH = Path(os.environ.get("BIBLE_PATH", DATA_DIR / "biblia.json"))
+    THEMES_PATH = Path(os.environ.get("THEMES_PATH", DATA_DIR / "themes.json"))
+    DEVOTIONALS_PATH = Path(os.environ.get("DEVOTIONALS_PATH", DATA_DIR / "devocionais.json"))
+
+    # Banco de dados de progresso/estudo. Mantem compatibilidade com a env antiga.
+    DATABASE_PATH = Path(
+        os.environ.get(
+            "READING_PLANS_DB",
+            os.environ.get("DATABASE_PATH", INSTANCE_DIR / "bibliakja.sqlite3"),
+        )
+    )
+
+    # Regras de negocio
+    ANNUAL_PLAN_YEAR = int(os.environ.get("ANNUAL_PLAN_YEAR", "2026"))
+    VERSES_PER_MINUTE = 4.8  # ritmo medio de leitura para estimar tempo
+
+    @classmethod
+    def ensure_dirs(cls) -> None:
+        cls.DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+class TestConfig(Config):
+    TESTING = True
+    DATABASE_PATH = Path(os.environ.get("TEST_DATABASE_PATH", INSTANCE_DIR / "test.sqlite3"))

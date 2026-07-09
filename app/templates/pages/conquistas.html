@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Conquistas — Bíblia KJA{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Sua jornada</p>
+  <h1>Conquistas</h1>
+  <p>Você desbloqueou {{ conquistadas }} de {{ total }} conquistas. Continue lendo para colecionar todas!</p>
+</div>
+
+<section class="streak-banner">
+  <div class="streak-flame">🔥</div>
+  <div class="streak-info">
+    <strong>{{ streak.atual }} {{ "dia seguido" if streak.atual == 1 else "dias seguidos" }}</strong>
+    <span>Melhor sequência: {{ streak.melhor }} {{ "dia" if streak.melhor == 1 else "dias" }}</span>
+  </div>
+  <div class="streak-progress">
+    <div class="progress-meta"><span>Conquistas</span><strong>{{ percent }}%</strong></div>
+    <div class="progress-track"><span style="width: {{ percent }}%"></span></div>
+  </div>
+</section>
+
+<div class="achievements-grid">
+  {% for item in items %}
+    <article class="card achievement-card {% if item.desbloqueado %}is-unlocked{% else %}is-locked{% endif %}">
+      <div class="achievement-icon">{{ item.icone if item.desbloqueado else "🔒" }}</div>
+      <div class="achievement-body"><strong>{{ item.nome }}</strong><small>{{ item.descricao }}</small></div>
+      {% if item.desbloqueado %}<span class="achievement-check">✓</span>{% endif %}
+    </article>
+  {% endfor %}
+</div>
+{% endblock %}

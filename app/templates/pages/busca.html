@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Buscar — Bíblia KJA{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Pesquisa</p>
+  <h1>Buscar na Bíblia</h1>
+  <p>Encontre palavras, frases, nomes ou temas em toda a Escritura. A busca ignora acentos e maiúsculas.</p>
+</div>
+
+<form class="search-filters" method="get" action="{{ url_for('bible.buscar') }}">
+  <input type="search" name="q" value="{{ query }}" placeholder="Ex.: amor, no princípio, fé…" style="flex:1; min-width:200px" autofocus>
+  <select name="testamento">
+    <option value="">Todos os testamentos</option>
+    <option value="Antigo Testamento" {{ 'selected' if testamento == 'Antigo Testamento' }}>Antigo Testamento</option>
+    <option value="Novo Testamento" {{ 'selected' if testamento == 'Novo Testamento' }}>Novo Testamento</option>
+  </select>
+  <select name="livro">
+    <option value="">Todos os livros</option>
+    {% for l in livros %}
+      <option value="{{ l.abbrev }}" {{ 'selected' if livro == l.abbrev }}>{{ l.name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn--primary" type="submit">Buscar</button>
+</form>
+
+{% if resultado is not none %}
+  <p class="search-summary" data-q="{{ query }}">
+    {% if resultado.total %}
+      <strong>{{ resultado.total }}</strong> ocorrência(s) para “{{ query }}”{% if resultado.truncated %} (mostrando as primeiras {{ resultado.results|length }}){% endif %}.
+    {% else %}
+      Nenhum resultado para “{{ query }}”.
+    {% endif %}
+  </p>
+
+  <div class="verse-list" id="results">
+    {% for r in resultado.results %}
+      <article class="card verse-item">
+        <a class="ref" href="{{ url_for('bible.capitulo', abbrev=r.abbrev, num=r.chapter) }}#v{{ r.verse }}">{{ r.book }} {{ r.chapter }}:{{ r.verse }}</a>
+        <p class="txt">{{ r.text }}</p>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state"><span class="ico">🔍</span>Digite algo acima para pesquisar.</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    var summary = document.querySelector(".search-summary");
+    var q = summary ? (summary.dataset.q || "").trim() : "";
+    if (!q) return;
+    var rx = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+    document.querySelectorAll("#results .txt").forEach(function (el) {
+      el.innerHTML = el.textContent.replace(rx, "<mark>$1</mark>");
+    });
+  })();
+</script>
+{% endblock %}

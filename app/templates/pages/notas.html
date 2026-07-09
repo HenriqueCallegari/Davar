@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Anotações — Bíblia KJA{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('study.hub') }}">← Meu Estudo</a>
+<div class="page-head"><p class="eyebrow">Anotações</p><h1>Buscar nas anotações</h1></div>
+
+<form class="search-filters" method="get">
+  <input type="search" name="q" value="{{ query }}" placeholder="Buscar por texto ou tag…" style="flex:1; min-width:200px">
+  <button class="btn btn--primary" type="submit">Buscar</button>
+</form>
+
+{% if notes %}
+  <div class="verse-list">
+    {% for n in notes %}
+      <article class="card verse-item">
+        <div class="meta"><a class="ref" href="{{ url_for('bible.capitulo', abbrev=n.abbrev, num=n.capitulo) }}#v{{ n.versiculo }}">{{ n.reference }}</a>
+          {% for tag in n.tag_list %}<span class="chip">#{{ tag }}</span>{% endfor %}</div>
+        <p class="txt">{{ n.text }}</p>
+        <div class="note-body">{{ n.texto | markdown }}</div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}<div class="empty-state"><span class="ico">✍️</span>Nenhuma anotação encontrada.</div>{% endif %}
+{% endblock %}

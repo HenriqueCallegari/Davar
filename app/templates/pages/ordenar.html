@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Ordene os Livros{% endblock %}
+{% block content %}
+<div class="game-shell">
+  <a class="back-link" href="{{ url_for('gamification.hub') }}">← Jogos</a>
+  <div class="page-head"><p class="eyebrow">Memória</p><h1>Ordene os Livros</h1>
+    <p>Clique nos livros na ordem correta em que aparecem na Bíblia.</p></div>
+
+  <div class="quiz-scorebar">
+    <div class="card"><span>Rodada</span><strong id="roundNum">1</strong></div>
+    <div class="card"><span>Acertos</span><strong id="hits">0</strong></div>
+    <div class="card"><span>Erros</span><strong id="miss">0</strong></div>
+  </div>
+
+  <div class="order-target" id="target"></div>
+  <div class="order-pool" id="pool"></div>
+
+  <div class="quiz-actions" style="margin-top:var(--sp-4)">
+    <span id="orderFeedback" class="save-status">Clique no primeiro livro da sequência.</span>
+    <button id="nextRound" class="btn btn--primary" type="button" hidden>Nova rodada →</button>
+  </div>
+</div>
+<script id="livrosData" type="application/json">{{ livros | tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/ordenar.js') }}" defer></script>{% endblock %}

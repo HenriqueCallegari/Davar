@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Início — Bíblia KJA{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <article class="card continue-card reveal">
+    <p class="eyebrow">Continue de onde parou</p>
+    {% if overview.continuar %}
+      <h2>{{ overview.continuar.nome }}</h2>
+      <p class="muted">Dia {{ overview.continuar.dia }} de {{ overview.continuar.total_dias }} · {{ overview.continuar.percent }}% concluído</p>
+      <div class="progress-track lg"><span style="width: {{ overview.continuar.percent }}%"></span></div>
+      <div class="card-actions">
+        <a class="btn btn--primary" href="{{ url_for('plans.mostrar_plano', plano_id=overview.continuar.plano_id) }}">Continuar leitura</a>
+        <a class="btn btn--ghost" href="{{ url_for('bible.livros') }}">Explorar a Bíblia</a>
+      </div>
+    {% else %}
+      <h2>Comece sua jornada</h2>
+      <p class="muted">Escolha um plano de leitura e mantenha uma sequência diária.</p>
+      <div class="card-actions"><a class="btn btn--primary" href="{{ url_for('plans.listar_planos') }}">Ver planos</a></div>
+    {% endif %}
+  </article>
+
+  <article class="card votd reveal">
+    <p class="eyebrow">Versículo do dia</p>
+    <blockquote>“{{ versiculo.text }}”
+      <cite>{{ versiculo.reference }}</cite>
+    </blockquote>
+    <div class="card-actions" style="margin-top:var(--sp-3)">
+      <a class="btn btn--soft" href="{{ url_for('bible.capitulo', abbrev=versiculo.abbrev, num=versiculo.chapter) }}">Ler o capítulo</a>
+    </div>
+  </article>
+</section>
+
+<section class="stat-tiles">
+  <div class="card stat-tile"><div class="num flame">{{ overview.sequencia_atual }}</div><div class="lbl">Sequência (dias)</div></div>
+  <div class="card stat-tile"><div class="num">{{ overview.capitulos_lidos }}</div><div class="lbl">Capítulos lidos</div></div>
+  <div class="card stat-tile"><div class="num">{{ overview.versiculos_lidos }}</div><div class="lbl">Versículos</div></div>
+  <div class="card stat-tile"><div class="num">{{ overview.tempo_total }}</div><div class="lbl">Minutos de leitura</div></div>
+</section>
+
+<div class="dash-section-title">
+  <h2>Seus planos</h2>
+  <a href="{{ url_for('plans.listar_planos') }}">Ver todos →</a>
+</div>
+<div class="mini-plans">
+  {% for plano in overview.plans %}
+    <a class="card mini-plan" href="{{ url_for('plans.mostrar_plano', plano_id=plano.id) }}">
+      <h3>{{ plano.nome }}</h3>
+      <div class="progress-track"><span style="width: {{ plano.progress.percent }}%"></span></div>
+      <div class="row"><span>Dia {{ plano.current_day }}/{{ plano.total_dias }}</span><span>{{ plano.progress.percent }}%</span></div>
+    </a>
+  {% endfor %}
+</div>
+
+<div class="dash-section-title"><h2>Atalhos</h2></div>
+<div class="quick-actions">
+  <a class="card quick-action" href="{{ url_for('bible.buscar') }}"><span class="ico">🔍</span><span class="lbl">Buscar</span></a>
+  <a class="card quick-action" href="{{ url_for('study.temas') }}"><span class="ico">🏷️</span><span class="lbl">Temas</span></a>
+  <a class="card quick-action" href="{{ url_for('study.hub') }}"><span class="ico">✍️</span><span class="lbl">Meu Estudo</span></a>
+  <a class="card quick-action" href="{{ url_for('dashboard.crescimento') }}"><span class="ico">📈</span><span class="lbl">Crescimento</span></a>
+  <a class="card quick-action" href="{{ url_for('gamification.hub') }}"><span class="ico">🎮</span><span class="lbl">Jogos</span></a>
+  <a class="card quick-action" href="{{ url_for('gamification.conquistas') }}"><span class="ico">🏆</span><span class="lbl">Conquistas</span></a>
+</div>
+
+{% endblock %}

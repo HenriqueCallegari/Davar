@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ colecao.nome }} — Coleção{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('study.hub') }}">← Meu Estudo</a>
+<div class="page-head">
+  <p class="eyebrow">Coleção</p>
+  <h1>📚 {{ colecao.nome }}</h1>
+  {% if colecao.descricao %}<p>{{ colecao.descricao }}</p>{% endif %}
+</div>
+
+{% if colecao.items %}
+  <div class="verse-list">
+    {% for it in colecao.items %}
+      <article class="card verse-item">
+        <a class="ref" href="{{ url_for('bible.capitulo', abbrev=it.abbrev, num=it.capitulo) }}#v{{ it.versiculo }}">{{ it.reference }}</a>
+        <p class="txt">{{ it.text }}</p>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state"><span class="ico">📚</span>Esta coleção está vazia. Adicione versículos a partir da leitura.</div>
+{% endif %}
+{% endblock %}

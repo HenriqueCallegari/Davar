@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1417">
+  <meta name="description" content="Plataforma de leitura e estudo bíblico — planos, grifos, anotações, temas e progresso.">
+  <title>{% block title %}Bíblia KJA{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}" type="image/svg+xml">
+  <link rel="manifest" href="{{ url_for('dashboard.manifest') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script>
+    // Aplica o tema antes da pintura para evitar flash.
+    (function () {
+      try {
+        var t = localStorage.getItem('kja_theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a href="{{ url_for('dashboard.home') }}" class="brand" aria-label="Início">
+        <span class="brand__mark">✦</span>
+        <span class="brand__name">Bíblia<strong>KJA</strong></span>
+      </a>
+
+      <form class="header-search" action="{{ url_for('bible.buscar') }}" method="get" role="search">
+        <input type="search" name="q" placeholder="Buscar na Bíblia…" aria-label="Buscar na Bíblia"
+               value="{{ request.args.get('q', '') if request.endpoint == 'bible.buscar' else '' }}">
+        <button type="submit" aria-label="Buscar">🔍</button>
+      </form>
+
+      <button id="themeToggle" class="theme-btn" type="button" aria-label="Alternar tema">
+        <span class="theme-btn__icon"></span>
+      </button>
+    </div>
+
+    <nav class="app-nav" aria-label="Navegação principal">
+      {% for item in nav_items %}
+        <a href="{{ url_for(item.endpoint) }}"
+           class="app-nav__link {% if request.endpoint == item.endpoint %}is-active{% endif %}">
+          <span class="app-nav__icon" aria-hidden="true">{{ item.icon }}</span>
+          <span class="app-nav__label">{{ item.label }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+  </header>
+
+  <main id="conteudo" class="app-main {% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="app-footer">
+    <p>Bíblia KJA · leitura, estudo e crescimento.</p>
+  </footer>
+
+  <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Ops — Bíblia KJA{% endblock %}
+{% block content %}
+<div class="error-page">
+  <div class="code">{{ code }}</div>
+  <h1>{{ mensagem }}</h1>
+  <p class="muted" style="margin:.8rem 0 1.5rem; color:var(--text-soft)">Vamos te levar de volta para um lugar seguro.</p>
+  <a href="{{ url_for('dashboard.home') }}" class="btn btn--primary">Voltar ao início</a>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{
+  "name": "Bíblia KJA — Leitura e Estudo",
+  "short_name": "Bíblia KJA",
+  "description": "Plataforma de leitura e estudo bíblico: planos, grifos, anotações, temas e progresso.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1013",
+  "theme_color": "#0f1417",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/static/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

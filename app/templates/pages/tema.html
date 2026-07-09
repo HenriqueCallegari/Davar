@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ tema.nome }} — Temas{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('study.temas') }}">← Temas</a>
+<div class="page-head">
+  <p class="eyebrow">{{ tema.icone }} Tema</p>
+  <h1>{{ tema.nome }}</h1>
+  <p>{{ tema.descricao }} · {{ tema.verses|length }} versículos encontrados.</p>
+</div>
+
+{% if tema.verses %}
+  <div class="verse-list">
+    {% for v in tema.verses %}
+      <article class="card verse-item">
+        <a class="ref" href="{{ url_for('bible.capitulo', abbrev=v.abbrev, num=v.chapter) }}#v{{ v.verse }}">{{ v.reference }}</a>
+        <p class="txt">{{ v.text }}</p>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}<div class="empty-state"><span class="ico">🏷️</span>Nenhum versículo encontrado para este tema.</div>{% endif %}
+{% endblock %}

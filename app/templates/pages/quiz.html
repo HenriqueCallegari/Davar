@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Quiz de Versículos{% endblock %}
+{% block content %}
+<div class="game-shell">
+  <a class="back-link" href="{{ url_for('gamification.hub') }}">← Jogos</a>
+  <div class="page-head"><p class="eyebrow">Quiz</p><h1>De qual livro é?</h1></div>
+
+  <div class="quiz-scorebar">
+    <div class="card"><span>Pergunta</span><strong id="qIndex">–</strong></div>
+    <div class="card"><span>Acertos</span><strong id="qScore">0</strong></div>
+    <div class="card"><span>Sequência</span><strong id="qStreak">0</strong></div>
+    <div class="card"><span>Recorde</span><strong id="qBest">0</strong></div>
+  </div>
+
+  <article class="card quiz-card">
+    <p class="quiz-verse" id="verseText">Carregando…</p>
+    <p class="quiz-reference" id="verseRef"></p>
+    <div class="quiz-options" id="options"></div>
+    <div class="quiz-actions">
+      <button id="nextBtn" class="btn btn--primary" type="button" disabled>Próxima →</button>
+      <span id="quizFeedback" class="save-status" aria-live="polite"></span>
+    </div>
+  </article>
+
+  <div class="card quiz-end" id="quizEnd" hidden>
+    <h2 id="endTitle"></h2><p id="endText"></p>
+    <button id="restartBtn" class="btn btn--primary" type="button">Jogar de novo</button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/quiz.js') }}" defer></script>{% endblock %}

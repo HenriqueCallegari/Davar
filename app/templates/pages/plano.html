@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ plan.nome }} — Dia {{ day }}{% endblock %}
+{% block content %}
+<div id="planData" data-plan-id="{{ plan.id }}" data-day="{{ day }}"></div>
+<a class="back-link" href="{{ url_for('plans.listar_planos') }}">← Planos</a>
+
+<header class="reading-plan-header">
+  <div>
+    <p class="eyebrow">Leitura de hoje</p>
+    <h1>{{ plan.nome }}</h1>
+    <p class="muted">Dia {{ day }} de {{ plan.total_dias }}{% if calendar_label %} · {{ calendar_label }}{% endif %}</p>
+    {% if statistics.sequencia_calendario %}
+      <p class="streak-inline">🔥 {{ statistics.sequencia_calendario }} {{ "dia seguido" if statistics.sequencia_calendario == 1 else "dias seguidos" }}</p>
+    {% endif %}
+  </div>
+  <div class="completion-badge {% if progress.percent == 100 %}is-complete{% endif %}">
+    {{ "Plano concluído" if progress.percent == 100 else progress.percent ~ "% concluído" }}
+  </div>
+</header>
+
+<section class="card today-panel">
+  <div>
+    <div class="progress-meta"><span>Progresso geral</span><strong id="progressPercent">{{ progress.percent }}%</strong></div>
+    <div class="progress-track lg"><span id="progressBar" style="width: {{ progress.percent }}%"></span></div>
+  </div>
+  <div class="day-actions">
+    {% if day > 1 %}<a class="btn btn--ghost" href="{{ url_for('plans.mostrar_plano', plano_id=plan.id) }}?dia={{ day - 1 }}">← Anterior</a>{% endif %}
+    <button id="continueReading" class="btn btn--primary" type="button" {% if not first_pending %}disabled{% endif %}>Continuar leitura</button>
+    {% if day < plan.total_dias %}<a class="btn btn--ghost" href="{{ url_for('plans.mostrar_plano', plano_id=plan.id) }}?dia={{ day + 1 }}">Próximo →</a>{% endif %}
+  </div>
+</section>
+
+<section class="readings-layout">
+  <article class="card card--pad">
+    <div class="section-heading">
+      <div><p class="eyebrow">Leituras planejadas</p><h2>Leituras do dia</h2></div>
+      <div class="time-pill"><span>Tempo estimado</span><strong>{{ estimated_minutes }} min</strong></div>
+    </div>
+
+    <div class="chapter-list" id="chapterList">
+      {% if has_free_main_reading %}
+        <div class="chapter-row free-row"><div class="free-dot"></div>
+          <div class="chapter-main"><strong>LIVRE</strong><small>Leitura principal do Novo Testamento</small></div></div>
+      {% endif %}
+      {% for chapter in chapters %}
+        <div class="chapter-row {% if chapter.concluido %}is-done{% endif %}"
+             data-url="{{ url_for('bible.capitulo', abbrev=chapter.abbrev, num=chapter.capitulo) }}?plano={{ plan.id }}"
+             data-book="{{ chapter.livro }}" data-chapter="{{ chapter.capitulo }}">
+          <label class="chapter-check">
+            <input type="checkbox" {% if chapter.concluido %}checked{% endif %} aria-label="Marcar {{ chapter.livro }} {{ chapter.capitulo }}">
+            <span></span>
+          </label>
+          <div class="chapter-main"><strong>{{ chapter.livro }} {{ chapter.capitulo }}</strong>
+            <small>{{ chapter.testamento }} · {{ chapter.versiculos }} versículos</small></div>
+          <a class="btn btn--soft" href="{{ url_for('bible.capitulo', abbrev=chapter.abbrev, num=chapter.capitulo) }}?plano={{ plan.id }}">Abrir</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="next-actions">
+      <button id="nextChapter" class="btn btn--ghost" type="button">Ir para próximo capítulo</button>
+      <span id="saveStatus" class="save-status" aria-live="polite">Tudo salvo</span>
+    </div>
+    <div id="dayCompleteMessage" class="day-complete {% if day_completed %}show{% endif %}">Dia concluído. Que essa leitura permaneça no coração.</div>
+  </article>
+
+  <aside class="card card--pad notes-card">
+    <div class="section-heading"><div><p class="eyebrow">Anotações</p><h2>Reflexão do dia</h2></div></div>
+    <textarea id="dayNote" placeholder="Hoje Deus falou comigo sobre…">{{ note }}</textarea>
+  </aside>
+</section>
+
+<div class="plan-footer-actions">
+  <a class="btn btn--ghost" href="{{ url_for('plans.mostrar_estatisticas', plano_id=plan.id) }}">Ver estatísticas</a>
+  <a class="btn btn--ghost" href="{{ url_for('plans.listar_planos') }}">Trocar plano</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/plano.js') }}" defer></script>
+{% endblock %}

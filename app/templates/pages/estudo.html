@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Meu Estudo — Bíblia KJA{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Seu segundo cérebro bíblico</p>
+  <h1>Meu Estudo</h1>
+  <p>Grifos, anotações, favoritos e coleções — tudo o que você marcou durante a leitura, reunido e pesquisável.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab is-active" data-tab="grifos">🖊️ Grifos ({{ highlights|length }})</button>
+  <button class="tab" data-tab="favoritos">⭐ Favoritos ({{ favorites|length }})</button>
+  <button class="tab" data-tab="notas">✍️ Anotações ({{ notes|length }})</button>
+  <button class="tab" data-tab="colecoes">📚 Coleções ({{ collections|length }})</button>
+  <a class="tab" href="{{ url_for('study.exportar') }}">⬇️ Exportar</a>
+</div>
+
+<section data-panel="grifos">
+  {% if highlights %}
+    <div class="verse-list">
+      {% for h in highlights %}
+        <article class="card verse-item">
+          <div class="meta"><a class="ref" href="{{ url_for('bible.capitulo', abbrev=h.abbrev, num=h.capitulo) }}#v{{ h.versiculo }}">{{ h.reference }}</a>
+            <span class="chip dot-{{ h.cor }}">{{ cores.get(h.cor, h.cor) }}</span></div>
+          <p class="txt">{{ h.text }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}<div class="empty-state"><span class="ico">🖊️</span>Nenhum grifo ainda. Grife versículos durante a leitura.</div>{% endif %}
+</section>
+
+<section data-panel="favoritos" hidden>
+  {% if favorites %}
+    <div class="verse-list">
+      {% for f in favorites %}
+        <article class="card verse-item">
+          <a class="ref" href="{{ url_for('bible.capitulo', abbrev=f.abbrev, num=f.capitulo) }}#v{{ f.versiculo }}">{{ f.reference }}</a>
+          <p class="txt">{{ f.text }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}<div class="empty-state"><span class="ico">⭐</span>Nenhum favorito ainda.</div>{% endif %}
+</section>
+
+<section data-panel="notas" hidden>
+  {% if notes %}
+    <div class="verse-list">
+      {% for n in notes %}
+        <article class="card verse-item">
+          <div class="meta"><a class="ref" href="{{ url_for('bible.capitulo', abbrev=n.abbrev, num=n.capitulo) }}#v{{ n.versiculo }}">{{ n.reference }}</a>
+            {% for tag in n.tag_list %}<span class="chip">#{{ tag }}</span>{% endfor %}</div>
+          <p class="txt">{{ n.text }}</p>
+          <div class="note-body">{{ n.texto | markdown }}</div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}<div class="empty-state"><span class="ico">✍️</span>Nenhuma anotação ainda.</div>{% endif %}
+</section>
+
+<section data-panel="colecoes" hidden>
+  <form id="newCollection" class="search-filters" style="margin-bottom:var(--sp-4)">
+    <input type="text" id="collName" placeholder="Nova coleção (ex.: Promessas, Ansiedade…)" style="flex:1; min-width:200px">
+    <button class="btn btn--primary" type="submit">Criar coleção</button>
+  </form>
+  {% if collections %}
+    <div class="mini-plans">
+      {% for c in collections %}
+        <a class="card mini-plan" href="{{ url_for('study.colecao', collection_id=c.id) }}">
+          <h3>📚 {{ c.nome }}</h3>
+          <div class="row"><span>{{ c.total }} versículo(s)</span><span>Abrir →</span></div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}<div class="empty-state"><span class="ico">📚</span>Crie coleções temáticas para organizar seus versículos.</div>{% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll(".tab[data-tab]").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".tab[data-tab]").forEach(function (t) { t.classList.remove("is-active"); });
+      tab.classList.add("is-active");
+      document.querySelectorAll("[data-panel]").forEach(function (p) { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+    });
+  });
+  var form = document.getElementById("newCollection");
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nome = document.getElementById("collName").value.trim();
+    if (!nome) return;
+    window.postJSON("/api/estudo/colecoes", { nome: nome }).then(function () { window.location.reload(); });
+  });
+</script>
+{% endblock %}

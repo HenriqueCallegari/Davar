@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Planos de Leitura — Bíblia KJA{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Leitura diária</p>
+  <h1>Planos de Leitura</h1>
+  <p>Escolha um caminho, acompanhe seu progresso e mantenha suas anotações salvas automaticamente.</p>
+</div>
+
+<div class="plans-grid">
+  {% for plano in planos %}
+    <article class="card plan-card reveal">
+      <div>
+        <span class="plan-kicker">
+          {% if plano.tipo == "novo_testamento" %}3 capítulos do NT
+          {% elif plano.tipo == "antigo_testamento" %}3 capítulos do AT
+          {% else %}Plano anual{% endif %}
+        </span>
+        <h2>{{ plano.nome }}</h2>
+        <p>
+          {% if plano.tipo == "novo_testamento" %}Leitura sequencial do Novo Testamento, em blocos de três capítulos por dia.
+          {% elif plano.tipo == "antigo_testamento" %}Leitura sequencial do Antigo Testamento, em blocos de três capítulos por dia.
+          {% else %}Calendário anual: Novo Testamento nos dias úteis, LIVRE nos fins de semana e Antigo Testamento todos os dias.{% endif %}
+        </p>
+      </div>
+
+      <div>
+        <div class="progress-meta"><span>{{ plano.progress.completed_chapters }} de {{ plano.progress.total_chapters }} capítulos</span><strong>{{ plano.progress.percent }}%</strong></div>
+        <div class="progress-track"><span style="width: {{ plano.progress.percent }}%"></span></div>
+      </div>
+
+      <dl class="plan-mini-stats">
+        <div><dt>Dia atual</dt><dd>{{ plano.current_day }} de {{ plano.total_dias }}</dd></div>
+        <div><dt>Sequência</dt><dd>{{ plano.statistics.sequencia_calendario }} dias 🔥</dd></div>
+      </dl>
+
+      <div class="card-actions">
+        <a href="{{ url_for('plans.mostrar_plano', plano_id=plano.id) }}" class="btn btn--primary">Continuar</a>
+        <a href="{{ url_for('plans.mostrar_estatisticas', plano_id=plano.id) }}" class="btn btn--ghost">Estatísticas</a>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+{% endblock %}

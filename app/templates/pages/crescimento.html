@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Crescimento — Bíblia KJA{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Painel de crescimento</p>
+  <h1>Sua evolução na Palavra</h1>
+  <p>Constância importa mais que velocidade. Acompanhe seus dias de leitura e mantenha o ritmo.</p>
+</div>
+
+<div class="growth-grid">
+  <div class="card stat-tile"><div class="num flame">{{ dados.sequencia_atual }}</div><div class="lbl">Sequência atual</div></div>
+  <div class="card stat-tile"><div class="num">{{ dados.melhor_sequencia }}</div><div class="lbl">Melhor sequência</div></div>
+  <div class="card stat-tile"><div class="num">{{ dados.dias_lidos }}</div><div class="lbl">Dias com leitura</div></div>
+  <div class="card stat-tile"><div class="num">{{ dados.media_diaria }}</div><div class="lbl">Média de caps/dia</div></div>
+</div>
+
+<section class="card card--pad" style="margin-bottom:var(--sp-4)">
+  <div class="section-heading"><div><p class="eyebrow">Consistência</p><h2>Calendário de leitura</h2></div></div>
+  <div class="heatmap-wrap">
+    <div class="heatmap">
+      {% for cell in dados.heatmap %}
+        {% set lvl = 0 if cell.count == 0 else (1 if cell.count == 1 else (2 if cell.count == 2 else (3 if cell.count == 3 else 4))) %}
+        <div class="heat-cell {% if lvl %}l{{ lvl }}{% endif %}" title="{{ cell.date }} · {{ cell.count }} capítulo(s)"></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="heat-legend">Menos
+    <span class="heat-cell"></span><span class="heat-cell l1"></span><span class="heat-cell l2"></span>
+    <span class="heat-cell l3"></span><span class="heat-cell l4"></span>Mais
+  </div>
+</section>
+
+<section class="card card--pad">
+  <div class="section-heading"><div><p class="eyebrow">Últimas 8 semanas</p><h2>Capítulos por semana</h2></div></div>
+  {% set maxtotal = (dados.weekly | map(attribute='total') | max) or 1 %}
+  <div class="bars">
+    {% for w in dados.weekly %}
+      <div class="bar">
+        <div class="fill" style="height: {{ ((w.total / maxtotal) * 100) | round(0, 'floor') }}%" title="{{ w.total }} capítulos"></div>
+        <div class="lbl">{{ w.label }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
