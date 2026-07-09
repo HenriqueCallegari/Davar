@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Início — Devar Adonai{% endblock %}
+{% block title %}Início — Davar Adonai{% endblock %}
 {% block content %}
 
 <section class="dash-hero">
@@ -54,12 +54,12 @@
 
 <div class="dash-section-title"><h2>Atalhos</h2></div>
 <div class="quick-actions">
-  <a class="card quick-action" href="{{ url_for('bible.buscar') }}"><span class="ico">🔍</span><span class="lbl">Buscar</span></a>
-  <a class="card quick-action" href="{{ url_for('study.temas') }}"><span class="ico">🏷️</span><span class="lbl">Temas</span></a>
-  <a class="card quick-action" href="{{ url_for('study.hub') }}"><span class="ico">✍️</span><span class="lbl">Meu Estudo</span></a>
-  <a class="card quick-action" href="{{ url_for('dashboard.crescimento') }}"><span class="ico">📈</span><span class="lbl">Crescimento</span></a>
-  <a class="card quick-action" href="{{ url_for('gamification.hub') }}"><span class="ico">🎮</span><span class="lbl">Jogos</span></a>
-  <a class="card quick-action" href="{{ url_for('gamification.conquistas') }}"><span class="ico">🏆</span><span class="lbl">Conquistas</span></a>
+  <a class="card quick-action" href="{{ url_for('bible.buscar') }}"><span class="lbl">Buscar</span></a>
+  <a class="card quick-action" href="{{ url_for('study.temas') }}"><span class="lbl">Temas</span></a>
+  <a class="card quick-action" href="{{ url_for('study.hub') }}"><span class="lbl">Meu Estudo</span></a>
+  <a class="card quick-action" href="{{ url_for('dashboard.crescimento') }}"><span class="lbl">Crescimento</span></a>
+  <a class="card quick-action" href="{{ url_for('gamification.hub') }}"><span class="lbl">Jogos</span></a>
+  <a class="card quick-action" href="{{ url_for('gamification.conquistas') }}"><span class="lbl">Conquistas</span></a>
 </div>
 
 {% endblock %}

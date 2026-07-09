@@ -2,98 +2,98 @@
   {
     "slug": "fe",
     "nome": "Fé",
-    "icone": "🕊️",
+    "icone": "",
     "descricao": "Confiar em Deus mesmo sem ver.",
     "palavras": ["fe", "crer", "creu", "creram", "crede", "crendo", "confianca", "confiar", "confiai"]
   },
   {
     "slug": "oracao",
     "nome": "Oração",
-    "icone": "🙏",
+    "icone": "",
     "descricao": "A conversa constante com o Pai.",
     "palavras": ["oracao", "orar", "orai", "orou", "oravam", "suplica", "clamor", "clamei", "rogo", "rogai"]
   },
   {
     "slug": "amor",
     "nome": "Amor",
-    "icone": "❤️",
+    "icone": "",
     "descricao": "O maior dos mandamentos.",
     "palavras": ["amor", "amar", "amado", "amados", "amai", "amou", "caridade"]
   },
   {
     "slug": "arrependimento",
     "nome": "Arrependimento",
-    "icone": "🔄",
+    "icone": "",
     "descricao": "Voltar-se de coração para Deus.",
     "palavras": ["arrependimento", "arrependei", "arrependa", "arrependeu", "arrependam", "convertei", "converter"]
   },
   {
     "slug": "familia",
     "nome": "Família",
-    "icone": "👨‍👩‍👧",
+    "icone": "‍‍",
     "descricao": "O lar como projeto de Deus.",
     "palavras": ["familia", "filhos", "filho", "pais", "esposa", "marido", "lar"]
   },
   {
     "slug": "salvacao",
     "nome": "Salvação",
-    "icone": "✝️",
+    "icone": "",
     "descricao": "A obra da graça em Cristo.",
     "palavras": ["salvacao", "salvo", "salvos", "salvar", "salvador", "redencao", "redimir"]
   },
   {
     "slug": "esperanca",
     "nome": "Esperança",
-    "icone": "🌅",
+    "icone": "",
     "descricao": "Firmar o olhar no que virá.",
     "palavras": ["esperanca", "esperar", "espero", "aguardar", "aguardo"]
   },
   {
     "slug": "ansiedade",
     "nome": "Ansiedade e Medo",
-    "icone": "🌿",
+    "icone": "",
     "descricao": "Paz para o coração inquieto.",
     "palavras": ["medo", "temor", "temas", "ansiosos", "ansiedade", "receio", "aflicao", "angustia"]
   },
   {
     "slug": "sabedoria",
     "nome": "Sabedoria",
-    "icone": "🦉",
+    "icone": "",
     "descricao": "O princípio do bom entendimento.",
     "palavras": ["sabedoria", "sabio", "sabios", "prudencia", "entendimento", "discernimento"]
   },
   {
     "slug": "perdao",
     "nome": "Perdão",
-    "icone": "🤝",
+    "icone": "",
     "descricao": "Libertar e ser libertado.",
     "palavras": ["perdao", "perdoar", "perdoai", "perdoa", "perdoou", "remissao"]
   },
   {
     "slug": "gratidao",
     "nome": "Gratidão e Louvor",
-    "icone": "🎶",
+    "icone": "",
     "descricao": "Reconhecer a bondade de Deus.",
     "palavras": ["gratidao", "gracas", "agradecer", "louvar", "louvai", "louvor", "louvarei"]
   },
   {
     "slug": "paz",
     "nome": "Paz",
-    "icone": "🕯️",
+    "icone": "",
     "descricao": "O descanso que vem do alto.",
     "palavras": ["paz", "tranquilidade", "sossego", "descanso", "repouso"]
   },
   {
     "slug": "provisao",
     "nome": "Provisão",
-    "icone": "🌾",
+    "icone": "",
     "descricao": "Deus cuida do necessário.",
     "palavras": ["provisao", "sustento", "prover", "provera", "riquezas", "prosperar", "abundancia"]
   },
   {
     "slug": "cura",
     "nome": "Cura",
-    "icone": "🩹",
+    "icone": "",
     "descricao": "Restauração de corpo e alma.",
     "palavras": ["cura", "curar", "curou", "sarar", "sarou", "saude", "enfermidade", "restaura"]
   }

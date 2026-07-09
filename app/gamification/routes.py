@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 
+from app.core.auth import current_plans
 from app.gamification.quiz import build_questions
 
 bp = Blueprint("gamification", __name__)
@@ -26,7 +27,7 @@ def ordenar():
 
 @bp.route("/conquistas")
 def conquistas():
-    dados = current_app.services.plans.get_achievements()
+    dados = current_plans().get_achievements()
     return render_template("pages/conquistas.html", **dados)
 
 

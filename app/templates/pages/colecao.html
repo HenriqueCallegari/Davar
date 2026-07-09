@@ -4,7 +4,7 @@
 <a class="back-link" href="{{ url_for('study.hub') }}">← Meu Estudo</a>
 <div class="page-head">
   <p class="eyebrow">Coleção</p>
-  <h1>📚 {{ colecao.nome }}</h1>
+  <h1> {{ colecao.nome }}</h1>
   {% if colecao.descricao %}<p>{{ colecao.descricao }}</p>{% endif %}
 </div>
 
@@ -18,6 +18,6 @@
     {% endfor %}
   </div>
 {% else %}
-  <div class="empty-state"><span class="ico">📚</span>Esta coleção está vazia. Adicione versículos a partir da leitura.</div>
+  <div class="empty-state">Esta coleção está vazia. Adicione versículos a partir da leitura.</div>
 {% endif %}
 {% endblock %}

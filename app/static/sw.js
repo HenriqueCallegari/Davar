@@ -1,6 +1,7 @@
-/* Service worker mínimo — app shell (cache-first para estáticos).
-   Base para modo offline completo (ver ROADMAP). */
-const CACHE = "kja-v2";
+/* Service worker — app shell.
+   CSS/JS: network-first (sempre pega a versão nova; cai no cache offline).
+   Ícones e demais estáticos: cache-first. Áudio: nunca cacheado (respostas 206). */
+const CACHE = "davar-v3";
 const ASSETS = [
   "/static/css/app.css",
   "/static/js/app.js",
@@ -24,19 +25,31 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
   var path = new URL(req.url).pathname;
-  // Nunca cachear áudio (respostas parciais 206 não podem ir para o Cache API).
-  if (path.indexOf("/static/audio/") === 0 || path.indexOf("/audio/") !== -1) return;
-  e.respondWith(
-    caches.match(req).then(function (hit) {
-      return hit || fetch(req).then(function (res) {
-        try {
-          if (res.status === 200 && path.indexOf("/static/") === 0) {
-            var copy = res.clone();
-            caches.open(CACHE).then(function (c) { c.put(req, copy); });
-          }
-        } catch (err) {}
+
+  if (path.indexOf("/static/audio/") === 0) return;  // áudio direto da rede
+
+  var isCode = /\/static\/(css|js)\//.test(path);
+  if (isCode) {
+    // network-first: garante CSS/JS sempre atualizados
+    e.respondWith(
+      fetch(req).then(function (res) {
+        var copy = res.clone();
+        caches.open(CACHE).then(function (c) { c.put(req, copy); });
         return res;
-      }).catch(function () { return hit; });
-    })
-  );
+      }).catch(function () { return caches.match(req); })
+    );
+    return;
+  }
+
+  if (path.indexOf("/static/") === 0) {
+    // cache-first para ícones e afins
+    e.respondWith(
+      caches.match(req).then(function (hit) {
+        return hit || fetch(req).then(function (res) {
+          if (res.status === 200) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
+          return res;
+        });
+      })
+    );
+  }
 });

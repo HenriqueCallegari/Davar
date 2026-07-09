@@ -7,16 +7,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from flask import Flask, render_template
+from flask import Flask, redirect, render_template, request, session, url_for
 
+from app.auth.repository import AuthRepository
 from app.bible.library import BibleLibrary
 from app.bible.repository import BibleRepository
 from app.config import Config
+from app.core.auth import current_user
 from app.core.text import markdown_to_html
+from app.core.user_data import UserDataManager
 from app.core.version import current_version_id
-from app.plans.repository import ReadingPlanRepository
-from app.study.repository import StudyRepository
 from app.study.themes import ThemeService
+
+# Endpoints acessiveis sem login.
+PUBLIC_ENDPOINTS = {
+    "auth.login", "auth.registrar", "auth.sair",
+    "dashboard.service_worker", "dashboard.manifest",
+}
 
 
 @dataclass
@@ -24,10 +31,10 @@ class Services:
     """Container de dependencias compartilhadas (injecao simples)."""
 
     library: BibleLibrary
-    bible: BibleRepository  # versao padrao (canon), usada por estudo/temas/quiz
-    plans: ReadingPlanRepository
-    study: StudyRepository
-    themes: ThemeService
+    bible: BibleRepository       # versao padrao (canon), leitura global
+    themes: ThemeService         # global (somente leitura)
+    auth: AuthRepository         # contas
+    user_data: UserDataManager   # repositorios por usuario (isolados)
 
 
 def create_app(config_object: type[Config] = Config) -> Flask:
@@ -40,9 +47,9 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     app.services = Services(
         library=library,
         bible=bible,
-        plans=ReadingPlanRepository(bible.books, config_object.DATABASE_PATH),
-        study=StudyRepository(bible, config_object.DATABASE_PATH),
         themes=ThemeService(bible, config_object.THEMES_PATH),
+        auth=AuthRepository(config_object.AUTH_DB),
+        user_data=UserDataManager(bible, config_object.USERS_DIR),
     )
 
     app.jinja_env.filters["markdown"] = markdown_to_html
@@ -52,17 +59,31 @@ def create_app(config_object: type[Config] = Config) -> Flask:
 
 
 def _register_blueprints(app: Flask) -> None:
+    from app.auth.routes import bp as auth_bp
     from app.bible.routes import bp as bible_bp
     from app.dashboard.routes import bp as dashboard_bp
     from app.gamification.routes import bp as gamification_bp
     from app.plans.routes import bp as plans_bp
     from app.study.routes import bp as study_bp
 
-    for blueprint in (dashboard_bp, bible_bp, plans_bp, gamification_bp, study_bp):
+    for blueprint in (auth_bp, dashboard_bp, bible_bp, plans_bp, gamification_bp, study_bp):
         app.register_blueprint(blueprint)
 
 
 def _register_shared(app: Flask) -> None:
+    @app.before_request
+    def require_login():
+        endpoint = request.endpoint
+        if endpoint is None or endpoint == "static" or endpoint in PUBLIC_ENDPOINTS:
+            return None
+        if session.get("user_id") is None:
+            return redirect(url_for("auth.login", next=request.path))
+        return None
+
+    @app.context_processor
+    def inject_user() -> dict:
+        return {"current_user": current_user()}
+
     @app.context_processor
     def inject_versions() -> dict:
         return {
@@ -74,14 +95,14 @@ def _register_shared(app: Flask) -> None:
     def inject_nav() -> dict:
         return {
             "nav_items": [
-                {"endpoint": "dashboard.home", "label": "Início", "icon": "🏠"},
-                {"endpoint": "bible.livros", "label": "Bíblia", "icon": "📖"},
-                {"endpoint": "plans.listar_planos", "label": "Planos", "icon": "🗓️"},
-                {"endpoint": "study.hub", "label": "Estudo", "icon": "✍️"},
-                {"endpoint": "study.temas", "label": "Temas", "icon": "🏷️"},
-                {"endpoint": "dashboard.crescimento", "label": "Crescimento", "icon": "📈"},
-                {"endpoint": "gamification.hub", "label": "Jogos", "icon": "🎮"},
-                {"endpoint": "gamification.conquistas", "label": "Conquistas", "icon": "🏆"},
+                {"endpoint": "dashboard.home", "label": "Início"},
+                {"endpoint": "bible.livros", "label": "Bíblia"},
+                {"endpoint": "plans.listar_planos", "label": "Planos"},
+                {"endpoint": "study.hub", "label": "Estudo"},
+                {"endpoint": "study.temas", "label": "Temas"},
+                {"endpoint": "dashboard.crescimento", "label": "Crescimento"},
+                {"endpoint": "gamification.hub", "label": "Jogos"},
+                {"endpoint": "gamification.conquistas", "label": "Conquistas"},
             ]
         }
 

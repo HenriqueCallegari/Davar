@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Jogos — Devar Adonai{% endblock %}
+{% block title %}Jogos — DAVAR{% endblock %}
 {% block content %}
 <div class="page-head">
   <p class="eyebrow">Aprender brincando</p>
@@ -9,17 +9,17 @@
 
 <div class="plans-grid game-shell">
   <a href="{{ url_for('gamification.quiz') }}" class="card game-card">
-    <div class="game-emoji">🎯</div><h2>Quiz de Versículos</h2>
+    <h2>Quiz de Versículos</h2>
     <p>De qual livro é este versículo? Perguntas geradas de toda a Bíblia.</p>
     <span class="btn btn--primary">Jogar</span>
   </a>
   <a href="{{ url_for('gamification.ordenar') }}" class="card game-card">
-    <div class="game-emoji">🧩</div><h2>Ordene os Livros</h2>
+    <h2>Ordene os Livros</h2>
     <p>Coloque os livros na ordem correta. Ótimo para memorizar a sequência canônica.</p>
     <span class="btn btn--primary">Jogar</span>
   </a>
   <a href="{{ url_for('gamification.conquistas') }}" class="card game-card">
-    <div class="game-emoji">🏆</div><h2>Conquistas</h2>
+    <h2>Conquistas</h2>
     <p>Veja as medalhas desbloqueadas e acompanhe sua sequência de leitura.</p>
     <span class="btn btn--ghost">Ver conquistas</span>
   </a>

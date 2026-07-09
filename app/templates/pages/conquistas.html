@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Conquistas — Devar Adonai{% endblock %}
+{% block title %}Conquistas — DAVAR{% endblock %}
 {% block content %}
 <div class="page-head">
   <p class="eyebrow">Sua jornada</p>
@@ -8,7 +8,7 @@
 </div>
 
 <section class="streak-banner">
-  <div class="streak-flame">🔥</div>
+  
   <div class="streak-info">
     <strong>{{ streak.atual }} {{ "dia seguido" if streak.atual == 1 else "dias seguidos" }}</strong>
     <span>Melhor sequência: {{ streak.melhor }} {{ "dia" if streak.melhor == 1 else "dias" }}</span>
@@ -22,7 +22,7 @@
 <div class="achievements-grid">
   {% for item in items %}
     <article class="card achievement-card {% if item.desbloqueado %}is-unlocked{% else %}is-locked{% endif %}">
-      <div class="achievement-icon">{{ item.icone if item.desbloqueado else "🔒" }}</div>
+      <div class="achievement-icon">{{ item.icone if item.desbloqueado else "" }}</div>
       <div class="achievement-body"><strong>{{ item.nome }}</strong><small>{{ item.descricao }}</small></div>
       {% if item.desbloqueado %}<span class="achievement-check">✓</span>{% endif %}
     </article>

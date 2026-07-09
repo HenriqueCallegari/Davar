@@ -1,0 +1,26 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Entrar — DAVAR{% endblock %}
+{% block tagline %}Que bom te ver de novo.{% endblock %}
+{% block form %}
+<div class="auth-head">
+  <h1>Bem-vindo de volta</h1>
+  <p>Entre para continuar sua leitura de onde parou.</p>
+</div>
+
+{% if erro %}<div class="auth-error" role="alert">{{ erro }}</div>{% endif %}
+
+<form class="auth-form" method="post" action="{{ url_for('auth.login') }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <label class="field">
+    <span>E-mail</span>
+    <input type="email" name="email" value="{{ email }}" placeholder="seu@email.com" autocomplete="email" required autofocus>
+  </label>
+  <label class="field">
+    <span>Senha</span>
+    <input type="password" name="senha" placeholder="Sua senha" autocomplete="current-password" required>
+  </label>
+  <button class="btn btn--primary btn--block auth-submit" type="submit">Entrar</button>
+</form>
+
+<p class="auth-switch">Ainda não tem conta? <a href="{{ url_for('auth.registrar') }}">Criar conta</a></p>
+{% endblock %}

@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 
+from app.core.auth import current_study
 from app.study.repository import COLOR_MEANING
 
 bp = Blueprint("study", __name__)
 
 
 def _study():
-    return current_app.services.study
+    return current_study()
 
 
 # ---- paginas ---------------------------------------------------------

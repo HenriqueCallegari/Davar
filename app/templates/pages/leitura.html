@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ name }} {{ num }} — Devar Adonai{% endblock %}
+{% block title %}{{ name }} {{ num }} — DAVAR{% endblock %}
 {% block main_class %}reading{% endblock %}
 {% block body_class %}reading-page{% endblock %}
 
@@ -12,9 +12,9 @@
 <div class="reading-toolbar">
   <button id="fontDown" class="btn btn--soft" title="Diminuir fonte">A−</button>
   <button id="fontUp" class="btn btn--soft" title="Aumentar fonte">A+</button>
-  <button id="ttsBtn" class="btn btn--soft" title="Ouvir">🔊 Ouvir</button>
-  <button id="ttsPause" class="btn btn--soft" title="Pausar/continuar">⏸️</button>
-  <button id="focusBtn" class="btn btn--soft" title="Modo foco">📖 Foco</button>
+  <button id="ttsBtn" class="btn btn--soft" title="Ouvir"> Ouvir</button>
+  <button id="ttsPause" class="btn btn--soft" title="Pausar/continuar">⏸</button>
+  <button id="focusBtn" class="btn btn--soft" title="Modo foco"> Foco</button>
   {% if bible_versions|length > 1 %}
     <select class="version-select" data-version-switch aria-label="Versão da Bíblia" title="Versão">
       {% for v in bible_versions %}
@@ -32,9 +32,9 @@
       <div class="verse__body">
         <span class="verse__text">{{ v.text }}</span>
         <div class="verse__actions">
-          <button class="mark-btn" aria-label="Grifar ou anotar">🖊️</button>
+          <button class="mark-btn" aria-label="Grifar ou anotar"></button>
           <button class="fav-btn" aria-label="Favoritar">{{ "★" if v.favorito else "☆" }}</button>
-          <button class="copy-btn" aria-label="Copiar versículo">📋</button>
+          <button class="copy-btn" aria-label="Copiar versículo"></button>
         </div>
         <div class="verse-note">{{ v.nota }}</div>
       </div>
@@ -51,7 +51,7 @@
   {% else %}<span></span>{% endif %}
 </nav>
 
-<button id="pomodoro" class="pomodoro" type="button" title="Timer de foco">⏱️ <span id="pomodoroLabel">Foco 25:00</span></button>
+<button id="pomodoro" class="pomodoro" type="button" title="Timer de foco">⏱ <span id="pomodoroLabel">Foco 25:00</span></button>
 
 <!-- Popover de marcação -->
 <div id="markPop" class="mark-pop" role="dialog" aria-label="Marcar versículo">

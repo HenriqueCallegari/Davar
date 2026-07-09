@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1417">
   <meta name="description" content="Plataforma de leitura e estudo bíblico — planos, grifos, anotações, temas e progresso.">
-  <title>{% block title %}Devar Adonai{% endblock %}</title>
+  <title>{% block title %}DAVAR{% endblock %}</title>
   <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}" type="image/svg+xml">
   <link rel="manifest" href="{{ url_for('dashboard.manifest') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
@@ -27,25 +27,35 @@
     <div class="app-header__inner">
       <a href="{{ url_for('dashboard.home') }}" class="brand" aria-label="Início">
         <span class="brand__mark">✦</span>
-        <span class="brand__name">Devar <strong>Adonai</strong></span>
+        <span class="brand__name">DA<strong>VAR</strong></span>
       </a>
 
       <form class="header-search" action="{{ url_for('bible.buscar') }}" method="get" role="search">
         <input type="search" name="q" placeholder="Buscar na Bíblia…" aria-label="Buscar na Bíblia"
                value="{{ request.args.get('q', '') if request.endpoint == 'bible.buscar' else '' }}">
-        <button type="submit" aria-label="Buscar">🔍</button>
+        <button type="submit" aria-label="Buscar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
       </form>
 
       <button id="themeToggle" class="theme-btn" type="button" aria-label="Alternar tema">
         <span class="theme-btn__icon"></span>
       </button>
+
+      {% if current_user %}
+        <span class="user-chip">
+          <span class="user-chip__name">{{ current_user.nome }}</span>
+          <a class="user-chip__logout" href="{{ url_for('auth.sair') }}">Sair</a>
+        </span>
+      {% else %}
+        <a class="user-chip__logout" href="{{ url_for('auth.login') }}">Entrar</a>
+      {% endif %}
     </div>
 
     <nav class="app-nav" aria-label="Navegação principal">
       {% for item in nav_items %}
         <a href="{{ url_for(item.endpoint) }}"
            class="app-nav__link {% if request.endpoint == item.endpoint %}is-active{% endif %}">
-          <span class="app-nav__icon" aria-hidden="true">{{ item.icon }}</span>
           <span class="app-nav__label">{{ item.label }}</span>
         </a>
       {% endfor %}
@@ -64,7 +74,7 @@
       <span aria-hidden="true">·</span>
       <a href="https://www.linkedin.com/in/henrique-callegari-/" target="_blank" rel="noopener">LinkedIn</a>
     </nav>
-    <p>Devar Adonai · leitura, estudo e crescimento · sem fins lucrativos.</p>
+    <p>DAVAR · leitura, estudo e crescimento · sem fins lucrativos.</p>
   </footer>
 
   <div id="musicPlayer" class="music-player" title="Música de fundo">

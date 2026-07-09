@@ -38,7 +38,7 @@
         progressBar.style.width = d.progress.percent + "%";
         progressPercent.textContent = d.progress.percent + "%";
         completeMessage.classList.toggle("show", Boolean(d.day_completed));
-        (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || "🏆"); });
+        (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || ""); });
         setStatus("Salvo automaticamente", true);
       }).catch(function () {
         checkbox.checked = !checkbox.checked;

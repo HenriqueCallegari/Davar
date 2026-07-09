@@ -150,8 +150,8 @@ img, svg { max-width: 100%; }
   transition: transform var(--tr), border-color var(--tr);
 }
 .theme-btn:hover { transform: translateY(-1px); border-color: var(--line-strong); }
-.theme-btn__icon::before { content: "🌙"; }
-:root[data-theme="light"] .theme-btn__icon::before { content: "☀️"; }
+.theme-btn__icon::before { content: "◐"; font-size: 1.2rem; line-height: 1; }
+:root[data-theme="light"] .theme-btn__icon::before { content: "◑"; }
 
 .app-nav {
   max-width: var(--maxw); margin: 0 auto;
@@ -555,3 +555,83 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
   .music-player { padding: .35rem .5rem; gap: .4rem; }
   .music-volume { width: 60px; }
 }
+
+/* ============================================================
+   AUTENTICAÇÃO (login / registro)
+   ============================================================ */
+.auth-body { min-height: 100vh; display: block; }
+.auth-shell {
+  min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr;
+}
+
+/* Painel esquerdo — hero acolhedor */
+.auth-hero {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  padding: var(--sp-7) var(--sp-6); overflow: hidden;
+  background:
+    radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 60%),
+    linear-gradient(155deg, var(--surface-hi), var(--bg) 75%);
+  border-right: 1px solid var(--line);
+}
+.auth-hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: radial-gradient(60% 50% at 90% 100%, color-mix(in srgb, var(--progress) 18%, transparent), transparent 70%);
+}
+.auth-hero__inner { position: relative; max-width: 460px; width: 100%; }
+.auth-brand {
+  display: inline-flex; align-items: center; gap: .5rem; text-decoration: none;
+  font-size: 1.5rem; font-weight: 800; letter-spacing: .04em; color: var(--text);
+}
+.auth-brand__mark { color: var(--accent); }
+.auth-tagline { margin-top: var(--sp-4); font-size: var(--step-2); font-weight: 700; line-height: 1.2; color: var(--text); }
+.auth-verse {
+  margin-top: var(--sp-5); font-family: var(--font-serif); font-size: var(--step-1);
+  line-height: 1.65; color: var(--text-soft); border-left: 3px solid var(--accent); padding-left: var(--sp-4);
+}
+.auth-verse cite { display: block; margin-top: var(--sp-2); font-style: normal; font-weight: 700; color: var(--accent); font-size: var(--step-0); }
+.auth-note { margin-top: var(--sp-5); color: var(--text-faint); font-size: var(--step--1); }
+
+/* Painel direito — formulário */
+.auth-panel { display: flex; align-items: center; justify-content: center; padding: var(--sp-6) var(--sp-5); background: var(--bg); }
+.auth-card { width: 100%; max-width: 400px; }
+.auth-head h1 { font-size: var(--step-2); }
+.auth-head p { margin-top: var(--sp-2); color: var(--text-soft); }
+.auth-form { display: grid; gap: var(--sp-4); margin-top: var(--sp-5); }
+.field { display: grid; gap: .4rem; }
+.field span { font-size: var(--step--1); font-weight: 700; color: var(--text-soft); }
+.field input {
+  width: 100%; padding: .85rem 1rem; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--text);
+  font: inherit; transition: border-color var(--tr), box-shadow var(--tr);
+}
+.field input::placeholder { color: var(--text-faint); }
+.field input:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+.auth-submit { margin-top: var(--sp-2); padding: .95rem; font-size: var(--step-0); }
+.auth-error {
+  margin-top: var(--sp-4); padding: .8rem 1rem; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-vermelho) 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--c-vermelho) 45%, transparent); color: var(--text); font-size: var(--step--1);
+}
+.auth-switch { margin-top: var(--sp-5); text-align: center; color: var(--text-soft); font-size: var(--step--1); }
+.auth-switch a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+
+@media (max-width: 860px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-hero { padding: var(--sp-6) var(--sp-5) var(--sp-5); border-right: 0; border-bottom: 1px solid var(--line); }
+  .auth-hero__inner { max-width: 640px; }
+  .auth-tagline { font-size: var(--step-1); }
+  .auth-verse { font-size: var(--step-0); }
+  .auth-panel { padding: var(--sp-5); }
+  .auth-card { max-width: 460px; }
+}
+
+/* Cabeçalho: usuário logado */
+.user-chip { display: inline-flex; align-items: center; gap: .5rem; flex: 0 0 auto; }
+.user-chip__name { font-size: var(--step--1); font-weight: 700; color: var(--text-soft); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-chip__logout {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-soft);
+  border-radius: var(--radius-pill); padding: .4rem .8rem; font-size: var(--step--1); font-weight: 700; text-decoration: none;
+}
+.user-chip__logout:hover { color: var(--text); border-color: var(--accent); }
+@media (max-width: 560px) { .user-chip__name { display: none; } }

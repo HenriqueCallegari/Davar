@@ -10,7 +10,7 @@
     <h1>{{ plan.nome }}</h1>
     <p class="muted">Dia {{ day }} de {{ plan.total_dias }}{% if calendar_label %} · {{ calendar_label }}{% endif %}</p>
     {% if statistics.sequencia_calendario %}
-      <p class="streak-inline">🔥 {{ statistics.sequencia_calendario }} {{ "dia seguido" if statistics.sequencia_calendario == 1 else "dias seguidos" }}</p>
+      <p class="streak-inline"> {{ statistics.sequencia_calendario }} {{ "dia seguido" if statistics.sequencia_calendario == 1 else "dias seguidos" }}</p>
     {% endif %}
   </div>
   <div class="completion-badge {% if progress.percent == 100 %}is-complete{% endif %}">

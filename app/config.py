@@ -40,6 +40,10 @@ class Config:
         )
     )
 
+    # Autenticacao: banco de contas + diretorio com um banco por usuario.
+    AUTH_DB = Path(os.environ.get("AUTH_DB", INSTANCE_DIR / "auth.sqlite3"))
+    USERS_DIR = Path(os.environ.get("USERS_DIR", INSTANCE_DIR / "users"))
+
     # Regras de negocio
     ANNUAL_PLAN_YEAR = int(os.environ.get("ANNUAL_PLAN_YEAR", "2026"))
     VERSES_PER_MINUTE = 4.8  # ritmo medio de leitura para estimar tempo
@@ -47,6 +51,8 @@ class Config:
     @classmethod
     def ensure_dirs(cls) -> None:
         cls.DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        cls.AUTH_DB.parent.mkdir(parents=True, exist_ok=True)
+        cls.USERS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class TestConfig(Config):

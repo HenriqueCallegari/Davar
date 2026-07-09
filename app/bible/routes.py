@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from flask import Blueprint, current_app, make_response, redirect, render_template, request, url_for
 
 from app.config import Config
+from app.core.auth import current_study
 from app.core.version import current_bible
 
 bp = Blueprint("bible", __name__)
@@ -57,7 +58,7 @@ def capitulos(abbrev: str):
 @bp.route("/livro/<abbrev>/capitulo/<int:num>")
 def capitulo(abbrev: str, num: int):
     bible = current_bible()
-    study = current_app.services.study
+    study = current_study()
     book = bible.get_book(abbrev)
     if not book:
         return render_template("pages/error.html", code=404,

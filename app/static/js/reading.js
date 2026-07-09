@@ -33,7 +33,7 @@
     if (!btn) return;
     var li = btn.closest(".verse");
     var text = li.querySelector(".verse__text").innerText.trim() + " (" + BOOK + " " + CHAPTER + ":" + li.dataset.verse + ")";
-    if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { window.showToast("Versículo copiado", "📋"); });
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { window.showToast("Versículo copiado", ""); });
   });
 
   // ---------- Favoritar ----------
@@ -46,7 +46,7 @@
     }).then(function (res) {
       li.classList.toggle("is-fav", res.favorito);
       btn.textContent = res.favorito ? "★" : "☆";
-    }).catch(function () { window.showToast("Erro ao favoritar", "⚠️"); });
+    }).catch(function () { window.showToast("Erro ao favoritar", ""); });
   });
 
   // ---------- Popover de marcação ----------
@@ -96,8 +96,8 @@
         COLORS.forEach(function (c) { li.classList.remove("hl-" + c); });
         pop.querySelectorAll(".swatch").forEach(function (s) { s.classList.remove("sel"); });
         if (cor) { li.classList.add("hl-" + cor); sw.classList.add("sel"); }
-        window.showToast(cor ? "Versículo grifado" : "Grifo removido", "🖊️");
-      }).catch(function () { window.showToast("Erro ao grifar", "⚠️"); });
+        window.showToast(cor ? "Versículo grifado" : "Grifo removido", "");
+      }).catch(function () { window.showToast("Erro ao grifar", ""); });
     });
   });
 
@@ -109,9 +109,9 @@
       abbrev: ABBREV, capitulo: CHAPTER, versiculo: Number(li.dataset.verse), texto: texto, tags: ""
     }).then(function () {
       li.querySelector(".verse-note").textContent = texto.trim();
-      window.showToast(texto.trim() ? "Anotação salva" : "Anotação removida", "✍️");
+      window.showToast(texto.trim() ? "Anotação salva" : "Anotação removida", "");
       closePop();
-    }).catch(function () { window.showToast("Erro ao salvar nota", "⚠️"); });
+    }).catch(function () { window.showToast("Erro ao salvar nota", ""); });
   });
 
   // ---------- TTS versículo a versículo ----------
@@ -127,7 +127,7 @@
 
   function clearTts() { verseItems.forEach(function (li) { li.classList.remove("tts-active"); }); }
   function speakFrom(i) {
-    if (i >= verseItems.length) { clearTts(); ttsBtn.textContent = "🔊 Ouvir"; return; }
+    if (i >= verseItems.length) { clearTts(); ttsBtn.textContent = " Ouvir"; return; }
     var li = verseItems[i];
     var text = li.querySelector(".verse__text").innerText.trim();
     clearTts();
@@ -139,9 +139,9 @@
     speechSynthesis.speak(u);
   }
   if (ttsBtn) ttsBtn.addEventListener("click", function () {
-    if (!window.speechSynthesis) { window.showToast("Áudio não suportado", "⚠️"); return; }
-    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); clearTts(); ttsBtn.textContent = "🔊 Ouvir"; return; }
-    ttsBtn.textContent = "🔊 Tocando"; speakFrom(0);
+    if (!window.speechSynthesis) { window.showToast("Áudio não suportado", ""); return; }
+    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); clearTts(); ttsBtn.textContent = " Ouvir"; return; }
+    ttsBtn.textContent = " Tocando"; speakFrom(0);
   });
   if (ttsPause) ttsPause.addEventListener("click", function () {
     if (!window.speechSynthesis) return;
@@ -160,7 +160,7 @@
       window.postJSON("/api/planos/" + PLANO + "/progresso", { livro: BOOK, capitulo: CHAPTER, concluido: true })
         .then(function (d) {
           window.showToast("Capítulo marcado como lido", "✓");
-          (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || "🏆"); });
+          (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || ""); });
         }).catch(function () {});
     } else {
       window.showToast("Leitura concluída", "✓");
@@ -199,7 +199,7 @@
     pomBtn.classList.add("running");
     timer = setInterval(function () {
       remaining--; render();
-      if (remaining <= 0) { clearInterval(timer); timer = null; pomBtn.classList.remove("running"); remaining = 25 * 60; render(); beep(); window.showToast("Sessão de foco concluída!", "🎉"); }
+      if (remaining <= 0) { clearInterval(timer); timer = null; pomBtn.classList.remove("running"); remaining = 25 * 60; render(); beep(); window.showToast("Sessão de foco concluída!", ""); }
     }, 1000);
   });
   render();

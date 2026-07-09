@@ -40,7 +40,7 @@
       chip.disabled = true; chip.classList.add("done");
       var slot = target.children[expected]; slot.textContent = nome; slot.classList.add("filled");
       expected++; hits++; hitsEl.textContent = hits;
-      if (expected === sequence.length) { feedback.textContent = "Sequência completa! 🎉"; feedback.classList.add("is-saved"); nextBtn.hidden = false; round++; }
+      if (expected === sequence.length) { feedback.textContent = "Sequência completa! "; feedback.classList.add("is-saved"); nextBtn.hidden = false; round++; }
       else feedback.textContent = "Isso! Próximo…";
     } else {
       miss++; missEl.textContent = miss; chip.classList.add("shake");

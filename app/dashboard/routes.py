@@ -5,6 +5,8 @@ from datetime import date
 
 from flask import Blueprint, current_app, render_template, send_from_directory
 
+from app.core.auth import current_plans
+
 bp = Blueprint("dashboard", __name__)
 
 
@@ -24,16 +26,15 @@ def manifest():
 
 @bp.route("/")
 def home():
-    services = current_app.services
-    overview = services.plans.reading_overview()
+    overview = current_plans().reading_overview()
     seed = date.today().toordinal()
-    versiculo = services.bible.verse_of_the_day(seed)
+    versiculo = current_app.services.bible.verse_of_the_day(seed)
     return render_template("pages/dashboard.html", overview=overview, versiculo=versiculo)
 
 
 @bp.route("/crescimento")
 def crescimento():
-    dados = current_app.services.plans.growth_data()
+    dados = current_plans().growth_data()
     return render_template("pages/crescimento.html", dados=dados)
 
 

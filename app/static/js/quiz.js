@@ -47,7 +47,7 @@
       if (b.textContent === p.correta) b.classList.add("correct");
       else if (b === btn) b.classList.add("wrong");
     });
-    if (acertou) { score++; streak++; els.feedback.textContent = "Acertou! 🎉"; els.feedback.classList.add("is-saved"); }
+    if (acertou) { score++; streak++; els.feedback.textContent = "Acertou! "; els.feedback.classList.add("is-saved"); }
     else { streak = 0; els.feedback.textContent = "Era " + p.correta + "."; }
     if (streak > best) { best = streak; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} }
     els.score.textContent = score; els.streak.textContent = streak; els.best.textContent = best;
@@ -60,8 +60,8 @@
     els.card.hidden = true; els.end.hidden = false;
     var pct = Math.round((score / perguntas.length) * 100);
     els.endTitle.textContent = score + "/" + perguntas.length + " acertos (" + pct + "%)";
-    els.endText.textContent = pct === 100 ? "Perfeito! 👑" : pct >= 70 ? "Muito bom! 🙌" :
-      pct >= 40 ? "Bom começo — a leitura diária ajuda. 📖" : "Não desanime! Cada leitura conta. 🌱";
+    els.endText.textContent = pct === 100 ? "Perfeito! " : pct >= 70 ? "Muito bom! " :
+      pct >= 40 ? "Bom começo — a leitura diária ajuda. " : "Não desanime! Cada leitura conta. ";
   }
   els.restart.addEventListener("click", carregar);
   carregar();
