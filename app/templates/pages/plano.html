@@ -28,6 +28,12 @@
     <button id="continueReading" class="btn btn--primary" type="button" {% if not first_pending %}disabled{% endif %}>Continuar leitura</button>
     {% if day < plan.total_dias %}<a class="btn btn--ghost" href="{{ url_for('plans.mostrar_plano', plano_id=plan.id) }}?dia={{ day + 1 }}">Próximo →</a>{% endif %}
   </div>
+  <form class="day-jump" action="{{ url_for('plans.mostrar_plano', plano_id=plan.id) }}" method="get">
+    <label for="jumpDay">Ir para o dia</label>
+    <input type="number" id="jumpDay" name="dia" min="1" max="{{ plan.total_dias }}" value="{{ day }}" required>
+    <span class="day-jump__total">de {{ plan.total_dias }}</span>
+    <button class="btn btn--soft" type="submit">Ir</button>
+  </form>
 </section>
 
 <section class="readings-layout">

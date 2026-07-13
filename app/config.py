@@ -52,6 +52,11 @@ class Config:
     def turso_enabled(cls) -> bool:
         return bool(cls.TURSO_DATABASE_URL and cls.TURSO_AUTH_TOKEN)
 
+    # Estude o Capitulo: sintese teologica original via IA, cacheada globalmente.
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+    CHAPTER_STUDY_MODEL = os.environ.get("CHAPTER_STUDY_MODEL", "claude-sonnet-5")
+    CHAPTER_STUDY_DB = Path(os.environ.get("CHAPTER_STUDY_DB", INSTANCE_DIR / "chapter_studies.sqlite3"))
+
     # Regras de negocio
     ANNUAL_PLAN_YEAR = int(os.environ.get("ANNUAL_PLAN_YEAR", "2026"))
     VERSES_PER_MINUTE = 4.8  # ritmo medio de leitura para estimar tempo

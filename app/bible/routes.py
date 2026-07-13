@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
-from flask import Blueprint, current_app, make_response, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, url_for
 
 from app.config import Config
 from app.core.auth import current_study
-from app.core.version import current_bible
+from app.core.version import current_bible, current_version_id
 
 bp = Blueprint("bible", __name__)
 
@@ -89,6 +89,22 @@ def capitulo(abbrev: str, num: int):
         navigation=bible.chapter_navigation(abbrev, num),
         plano_id=request.args.get("plano", type=int),
     )
+
+
+@bp.get("/api/estudo-capitulo/<abbrev>/<int:num>")
+def api_estudo_capitulo(abbrev: str, num: int):
+    bible = current_bible()
+    book = bible.get_book(abbrev)
+    if not book:
+        return jsonify({"disponivel": False, "motivo": "Livro não encontrado."}), 404
+    verses = bible.get_chapter(abbrev, num)
+    if verses is None:
+        return jsonify({"disponivel": False, "motivo": "Capítulo não encontrado."}), 404
+
+    resultado = current_app.services.chapter_study.generate(
+        current_version_id(), book["abbrev"], num, book["name"], verses
+    )
+    return jsonify(resultado)
 
 
 @bp.route("/buscar")

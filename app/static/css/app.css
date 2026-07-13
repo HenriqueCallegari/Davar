@@ -316,6 +316,35 @@ img, svg { max-width: 100%; }
   background: var(--surface-hi); border-radius: var(--radius-sm); padding: .5rem .7rem; border-left: 2px solid var(--accent); }
 .verse-note:empty { display: none; }
 
+/* ---------- SELEÇÃO MÚLTIPLA DE VERSÍCULOS ---------- */
+#selectModeBtn.is-active { background: var(--accent); color: #241c0d; border-color: transparent; }
+.verse__select {
+  flex: 0 0 auto; width: 0; height: 22px; margin-top: .2rem; border-radius: 6px;
+  border: 2px solid var(--line-strong); background: var(--surface); opacity: 0;
+  transition: width var(--tr), opacity var(--tr), background var(--tr), border-color var(--tr);
+  overflow: hidden;
+}
+.verses.select-mode .verse__select { width: 22px; opacity: 1; margin-right: -.2rem; }
+.verses.select-mode .verse__actions { pointer-events: none; opacity: .3; }
+.verses.select-mode .verse { cursor: pointer; }
+.verse.is-selected { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.verse.is-selected .verse__select {
+  background: var(--accent); border-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23241c0d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: 14px;
+}
+
+.select-bar {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 56;
+  display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--radius-pill);
+  padding: .6rem .9rem; box-shadow: var(--shadow); max-width: calc(100vw - 24px);
+}
+.select-bar__count { font-size: var(--step--1); font-weight: 700; color: var(--text-soft); white-space: nowrap; }
+.select-bar__count strong { color: var(--accent); }
+.select-bar__swatches { display: flex; gap: .35rem; }
+@media (max-width: 560px) { .select-bar { bottom: 8px; padding: .5rem .6rem; gap: .5rem; } }
+
 /* popover de marcação */
 .mark-pop { position: absolute; z-index: 40; background: var(--surface-2); border: 1px solid var(--line-strong);
   border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--sp-3); display: none; min-width: 240px; }
@@ -362,7 +391,16 @@ body.focus-mode .verse__num { opacity: .4; }
 .completion-badge.is-complete { background: color-mix(in srgb, var(--progress) 30%, var(--surface)); color: var(--text); }
 
 .today-panel { padding: var(--sp-4); display: grid; grid-template-columns: 1fr auto; gap: var(--sp-4); align-items: center; margin-bottom: var(--sp-4); }
-.day-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.day-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; }
+.day-jump { display: flex; align-items: center; gap: .5rem; margin-left: auto; font-size: var(--step--1); color: var(--text-soft); }
+.day-jump label { font-weight: 600; white-space: nowrap; }
+.day-jump input[type="number"] {
+  width: 64px; padding: .45rem .5rem; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: var(--surface); color: var(--text); font: inherit; text-align: center;
+}
+.day-jump input[type="number"]:focus { outline: none; box-shadow: var(--ring); border-color: var(--accent); }
+.day-jump__total { color: var(--text-faint); white-space: nowrap; }
+@media (max-width: 620px) { .day-jump { margin-left: 0; width: 100%; } }
 .readings-layout { display: grid; grid-template-columns: 1.4fr .6fr; gap: var(--sp-4); }
 .section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-4); }
 .section-heading h2 { font-size: var(--step-1); }
@@ -648,3 +686,49 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 }
 .user-chip__logout:hover { color: var(--text); border-color: var(--accent); }
 @media (max-width: 560px) { .user-chip__name { display: none; } }
+
+/* ---------- ESTUDAR O CAPÍTULO ---------- */
+.study-tab { font-weight: 700; }
+.study-tab svg { width: 16px; height: 16px; }
+
+.study-overlay {
+  position: fixed; inset: 0; z-index: 70; display: flex; justify-content: flex-end;
+  background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px);
+}
+.study-panel {
+  width: min(560px, 100%); height: 100%; overflow-y: auto; background: var(--surface-2);
+  border-left: 1px solid var(--line-strong); box-shadow: var(--shadow);
+  animation: slideIn .25s ease;
+}
+@keyframes slideIn { from { transform: translateX(24px); opacity: .5; } to { transform: translateX(0); opacity: 1; } }
+.study-panel__header {
+  position: sticky; top: 0; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); background: var(--surface-2); border-bottom: 1px solid var(--line);
+}
+.study-panel__header h2 { font-size: var(--step-2); font-family: var(--font-serif); }
+.study-panel__body { padding: var(--sp-5); display: grid; gap: var(--sp-5); }
+.study-content section h3 {
+  font-size: var(--step--1); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin-bottom: var(--sp-2);
+}
+.study-text p { font-family: var(--font-serif); font-size: var(--step-0); line-height: 1.75; color: var(--text); margin-bottom: .8em; }
+.study-text p:last-child { margin-bottom: 0; }
+.study-list { list-style: none; display: grid; gap: .6rem; }
+.study-list li {
+  font-size: var(--step-0); line-height: 1.6; color: var(--text); padding-left: 1.4rem; position: relative;
+}
+.study-list li::before { content: "•"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+.study-list--num { counter-reset: q; }
+.study-list--num li { padding-left: 1.8rem; }
+.study-list--num li::before { content: counter(q) "."; counter-increment: q; font-weight: 800; }
+
+.study-loading { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); padding: var(--sp-7) var(--sp-4); color: var(--text-soft); }
+.study-spinner {
+  width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line-strong); border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.study-empty { padding: var(--sp-6) var(--sp-4); text-align: center; color: var(--text-soft); }
+
+@media (max-width: 620px) {
+  .study-panel { width: 100%; }
+}

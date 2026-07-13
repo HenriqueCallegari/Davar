@@ -15,6 +15,11 @@
   <button id="ttsBtn" class="btn btn--soft" title="Ouvir"> Ouvir</button>
   <button id="ttsPause" class="btn btn--soft" title="Pausar/continuar">⏸</button>
   <button id="focusBtn" class="btn btn--soft" title="Modo foco"> Foco</button>
+  <button id="selectModeBtn" class="btn btn--soft" title="Selecionar vários versículos" aria-pressed="false">Selecionar</button>
+  <button id="studyTabBtn" class="btn btn--soft study-tab" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+    Estudar o Capítulo
+  </button>
   {% if bible_versions|length > 1 %}
     <select class="version-select" data-version-switch aria-label="Versão da Bíblia" title="Versão">
       {% for v in bible_versions %}
@@ -28,6 +33,7 @@
     data-abbrev="{{ abbrev }}" data-book="{{ name }}" data-chapter="{{ num }}" data-plano="{{ plano_id or '' }}">
   {% for v in verses %}
     <li class="verse {% if v.cor %}hl-{{ v.cor }}{% endif %} {% if v.favorito %}is-fav{% endif %}" data-verse="{{ v.n }}">
+      <span class="verse__select" aria-hidden="true"></span>
       <span class="verse__num">{{ v.n }}</span>
       <div class="verse__body">
         <span class="verse__text">{{ v.text }}</span>
@@ -50,6 +56,20 @@
     </li>
   {% endfor %}
 </ol>
+
+<div id="selectBar" class="select-bar" hidden>
+  <span class="select-bar__count"><strong id="selectCount">0</strong> selecionado(s)</span>
+  <div class="select-bar__swatches">
+    <button class="swatch amarelo" data-cor="amarelo" title="Promessa"></button>
+    <button class="swatch azul" data-cor="azul" title="Ensino"></button>
+    <button class="swatch verde" data-cor="verde" title="Crescimento"></button>
+    <button class="swatch vermelho" data-cor="vermelho" title="Alerta"></button>
+    <button class="swatch roxo" data-cor="roxo" title="Adoração"></button>
+    <button class="swatch none" data-cor="" title="Remover grifo">✕</button>
+  </div>
+  <button id="selectClear" class="btn btn--ghost" type="button">Limpar</button>
+  <button id="selectDone" class="btn btn--soft" type="button">Concluir</button>
+</div>
 
 <nav class="chapter-nav">
   {% if navigation.prev %}
@@ -76,6 +96,46 @@
   <div class="pop-actions">
     <button id="saveNote" class="btn btn--primary" type="button">Salvar nota</button>
     <button id="closePop" class="btn btn--ghost" type="button">Fechar</button>
+  </div>
+</div>
+
+<!-- Painel: Estudar o Capítulo -->
+<div id="studyOverlay" class="study-overlay" hidden>
+  <div class="study-panel" role="dialog" aria-label="Estudar o capítulo" aria-modal="true">
+    <div class="study-panel__header">
+      <div>
+        <p class="eyebrow">Estudo do capítulo</p>
+        <h2>{{ name }} {{ num }}</h2>
+      </div>
+      <button id="studyCloseBtn" class="btn btn--ghost" type="button" aria-label="Fechar">Fechar</button>
+    </div>
+    <div class="study-panel__body" id="studyBody">
+      <div class="study-loading" id="studyLoading" hidden>
+        <div class="study-spinner" aria-hidden="true"></div>
+        <p>Preparando o estudo deste capítulo…</p>
+      </div>
+      <div class="study-content" id="studyContent" hidden>
+        <section>
+          <h3>O que acontece neste capítulo</h3>
+          <div id="studyResumo" class="study-text"></div>
+        </section>
+        <section>
+          <h3>Contexto</h3>
+          <div id="studyContexto" class="study-text"></div>
+        </section>
+        <section>
+          <h3>Mensagens-chave</h3>
+          <ul id="studyMensagens" class="study-list"></ul>
+        </section>
+        <section>
+          <h3>Para refletir</h3>
+          <ol id="studyPerguntas" class="study-list study-list--num"></ol>
+        </section>
+      </div>
+      <div class="study-empty" id="studyEmpty" hidden>
+        <p id="studyEmptyText"></p>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

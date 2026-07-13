@@ -50,6 +50,83 @@
     }).catch(function () { window.showToast("Erro ao favoritar", ""); });
   });
 
+  // ---------- Selecionar vários versículos (grifo em lote) ----------
+  var selectModeBtn = document.getElementById("selectModeBtn");
+  var selectBar = document.getElementById("selectBar");
+  var selectCount = document.getElementById("selectCount");
+  var selecting = false;
+  var selected = [];
+
+  function updateSelectBar() {
+    selectCount.textContent = selected.length;
+    selectBar.hidden = selected.length === 0;
+  }
+
+  function toggleSelectMode(force) {
+    selecting = typeof force === "boolean" ? force : !selecting;
+    versesEl.classList.toggle("select-mode", selecting);
+    selectModeBtn.setAttribute("aria-pressed", String(selecting));
+    selectModeBtn.classList.toggle("is-active", selecting);
+    if (!selecting) {
+      selected.forEach(function (li) { li.classList.remove("is-selected"); });
+      selected = [];
+      updateSelectBar();
+      closePop();
+    }
+  }
+
+  function toggleVerseSelection(li) {
+    var idx = selected.indexOf(li);
+    if (idx >= 0) {
+      selected.splice(idx, 1);
+      li.classList.remove("is-selected");
+    } else {
+      selected.push(li);
+      li.classList.add("is-selected");
+    }
+    updateSelectBar();
+  }
+
+  selectModeBtn.addEventListener("click", function () { toggleSelectMode(); });
+
+  versesEl.addEventListener("click", function (ev) {
+    if (!selecting) return;
+    if (ev.target.closest(".verse-act")) return; // botoes individuais desativados durante selecao
+    var li = ev.target.closest(".verse");
+    if (!li) return;
+    ev.preventDefault();
+    toggleVerseSelection(li);
+  });
+
+  document.getElementById("selectClear").addEventListener("click", function () {
+    selected.forEach(function (li) { li.classList.remove("is-selected"); });
+    selected = [];
+    updateSelectBar();
+  });
+
+  document.getElementById("selectDone").addEventListener("click", function () { toggleSelectMode(false); });
+
+  selectBar.querySelectorAll(".swatch").forEach(function (sw) {
+    sw.addEventListener("click", function () {
+      if (!selected.length) return;
+      var cor = sw.dataset.cor || null;
+      var alvo = selected.slice();
+      var numeros = alvo.map(function (li) { return Number(li.dataset.verse); });
+      window.postJSON("/api/estudo/grifo-lote", {
+        abbrev: ABBREV, capitulo: CHAPTER, versiculos: numeros, cor: cor
+      }).then(function () {
+        alvo.forEach(function (li) {
+          COLORS.forEach(function (c) { li.classList.remove("hl-" + c); });
+          if (cor) li.classList.add("hl-" + cor);
+          li.classList.remove("is-selected");
+        });
+        selected = [];
+        updateSelectBar();
+        window.showToast(cor ? numeros.length + " versículos grifados" : "Grifos removidos", "");
+      }).catch(function () { window.showToast("Erro ao grifar em lote", ""); });
+    });
+  });
+
   // ---------- Popover de marcação ----------
   var pop = document.getElementById("markPop");
   var noteField = document.getElementById("markNote");
@@ -204,4 +281,83 @@
     }, 1000);
   });
   render();
+
+  // ---------- Estudar o Capítulo ----------
+  var studyBtn = document.getElementById("studyTabBtn");
+  var studyOverlay = document.getElementById("studyOverlay");
+  var studyCloseBtn = document.getElementById("studyCloseBtn");
+  var studyLoading = document.getElementById("studyLoading");
+  var studyContentEl = document.getElementById("studyContent");
+  var studyEmptyEl = document.getElementById("studyEmpty");
+  var studyEmptyText = document.getElementById("studyEmptyText");
+  var studyCache = null;
+
+  function openStudy() {
+    studyOverlay.hidden = false;
+    document.body.classList.add("study-open");
+    if (studyCache) { renderStudy(studyCache); return; }
+    loadStudy();
+  }
+  function closeStudy() {
+    studyOverlay.hidden = true;
+    document.body.classList.remove("study-open");
+  }
+  function setStudyState(state) {
+    studyLoading.hidden = state !== "loading";
+    studyContentEl.hidden = state !== "content";
+    studyEmptyEl.hidden = state !== "empty";
+  }
+  function renderStudy(data) {
+    if (!data.disponivel) {
+      studyEmptyText.textContent = data.motivo || "Não foi possível carregar o estudo deste capítulo.";
+      setStudyState("empty");
+      return;
+    }
+    document.getElementById("studyResumo").innerHTML = paragraphsHtml(data.resumo);
+    document.getElementById("studyContexto").innerHTML = paragraphsHtml(data.contexto);
+    fillList(document.getElementById("studyMensagens"), data.mensagens);
+    fillList(document.getElementById("studyPerguntas"), data.perguntas);
+    setStudyState("content");
+  }
+  function paragraphsHtml(text) {
+    if (!text) return "";
+    return String(text).split(/\n+/).filter(Boolean).map(function (p) {
+      return "<p></p>".replace("</p>", escapeHtml(p) + "</p>");
+    }).join("");
+  }
+  function fillList(el, items) {
+    el.innerHTML = "";
+    (items || []).forEach(function (item) {
+      var li = document.createElement("li");
+      li.textContent = item;
+      el.appendChild(li);
+    });
+  }
+  function escapeHtml(s) {
+    var div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+  function loadStudy() {
+    setStudyState("loading");
+    fetch("/api/estudo-capitulo/" + ABBREV + "/" + CHAPTER)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        studyCache = data;
+        renderStudy(data);
+      })
+      .catch(function () {
+        studyEmptyText.textContent = "Não foi possível carregar o estudo agora. Tente novamente.";
+        setStudyState("empty");
+      });
+  }
+
+  if (studyBtn) studyBtn.addEventListener("click", openStudy);
+  if (studyCloseBtn) studyCloseBtn.addEventListener("click", closeStudy);
+  if (studyOverlay) studyOverlay.addEventListener("click", function (ev) {
+    if (ev.target === studyOverlay) closeStudy();
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !studyOverlay.hidden) closeStudy();
+  });
 })();

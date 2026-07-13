@@ -114,6 +114,29 @@ class StudyRepository:
             )
             return {"abbrev": abbrev, "capitulo": chapter, "versiculo": verse, "cor": color}
 
+    def set_highlights_batch(
+        self, abbrev: str, chapter: int, verses: list[int], color: str | None
+    ) -> dict[str, Any]:
+        """Aplica (ou remove) a mesma cor a varios versiculos de uma vez."""
+        if color is not None and color not in VALID_COLORS:
+            raise ValueError(f"Cor invalida: {color}")
+        with self._connect() as connection:
+            if color is None:
+                connection.executemany(
+                    "DELETE FROM highlights WHERE abbrev = ? AND capitulo = ? AND versiculo = ?",
+                    [(abbrev, chapter, verse) for verse in verses],
+                )
+            else:
+                connection.executemany(
+                    """
+                    INSERT INTO highlights (abbrev, capitulo, versiculo, cor)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(abbrev, capitulo, versiculo) DO UPDATE SET cor = excluded.cor
+                    """,
+                    [(abbrev, chapter, verse, color) for verse in verses],
+                )
+        return {"abbrev": abbrev, "capitulo": chapter, "versiculos": verses, "cor": color}
+
     # ---- favoritos ----------------------------------------------------
     def toggle_favorite(self, abbrev: str, chapter: int, verse: int) -> dict[str, Any]:
         with self._connect() as connection:

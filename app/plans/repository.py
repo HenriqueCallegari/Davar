@@ -128,6 +128,13 @@ class ReadingPlanRepository:
                 codigo TEXT PRIMARY KEY,
                 desbloqueado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS plan_bookmarks (
+                plano_id INTEGER PRIMARY KEY,
+                dia INTEGER NOT NULL,
+                atualizado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (plano_id) REFERENCES reading_plans(id) ON DELETE CASCADE
+            );
             """
         )
 
@@ -403,8 +410,11 @@ class ReadingPlanRepository:
             if plan is None:
                 return None
 
-            selected_day = day or self._current_day(connection, plan_id, plan["total_dias"])
-            selected_day = max(1, min(int(selected_day), plan["total_dias"]))
+            if day is None:
+                selected_day = self._effective_day(connection, plan_id, plan["total_dias"])
+            else:
+                selected_day = max(1, min(int(day), plan["total_dias"]))
+                self._set_bookmark(connection, plan_id, selected_day)
             chapters = self._chapters_for_day(connection, plan_id, selected_day)
             note = connection.execute(
                 "SELECT texto FROM reading_notes WHERE plano_id = ? AND dia = ?",
@@ -421,7 +431,7 @@ class ReadingPlanRepository:
             return {
                 "plan": dict(plan),
                 "day": selected_day,
-                "current_day": self._current_day(connection, plan_id, plan["total_dias"]),
+                "current_day": self._effective_day(connection, plan_id, plan["total_dias"]),
                 "chapters": chapters,
                 "calendar_label": self._format_daily_portion_date(calendar_date) if calendar_date else "",
                 "has_free_main_reading": is_daily_portion and not has_new_testament,
@@ -513,7 +523,7 @@ class ReadingPlanRepository:
                 "plan": dict(plan),
                 "statistics": self._statistics(connection, plan_id),
                 "progress": self._plan_progress(connection, plan_id),
-                "current_day": self._current_day(connection, plan_id, plan["total_dias"]),
+                "current_day": self._effective_day(connection, plan_id, plan["total_dias"]),
             }
 
     def _plan_summary(self, connection: sqlite3.Connection, plan: sqlite3.Row) -> dict[str, Any]:
@@ -523,7 +533,7 @@ class ReadingPlanRepository:
             **dict(plan),
             "progress": progress,
             "statistics": statistics,
-            "current_day": self._current_day(connection, plan["id"], plan["total_dias"]),
+            "current_day": self._effective_day(connection, plan["id"], plan["total_dias"]),
         }
 
     def _chapters_for_day(
@@ -545,6 +555,7 @@ class ReadingPlanRepository:
         return [{**dict(row), "concluido": bool(row["concluido"])} for row in rows]
 
     def _current_day(self, connection: sqlite3.Connection, plan_id: int, total_days: int) -> int:
+        """Primeiro dia com capitulos pendentes (metrica de progresso real)."""
         row = connection.execute(
             """
             SELECT dia
@@ -558,6 +569,29 @@ class ReadingPlanRepository:
             (plan_id,),
         ).fetchone()
         return row["dia"] if row else total_days
+
+    def _get_bookmark(self, connection: sqlite3.Connection, plan_id: int) -> int | None:
+        row = connection.execute(
+            "SELECT dia FROM plan_bookmarks WHERE plano_id = ?", (plan_id,)
+        ).fetchone()
+        return row["dia"] if row else None
+
+    def _set_bookmark(self, connection: sqlite3.Connection, plan_id: int, day: int) -> None:
+        connection.execute(
+            """
+            INSERT INTO plan_bookmarks (plano_id, dia, atualizado_em)
+            VALUES (?, ?, datetime('now'))
+            ON CONFLICT(plano_id) DO UPDATE SET dia = excluded.dia, atualizado_em = excluded.atualizado_em
+            """,
+            (plan_id, day),
+        )
+
+    def _effective_day(self, connection: sqlite3.Connection, plan_id: int, total_days: int) -> int:
+        """Dia a mostrar por padrao: o marcador definido pelo usuario, senao o primeiro pendente."""
+        bookmark = self._get_bookmark(connection, plan_id)
+        if bookmark is not None:
+            return max(1, min(bookmark, total_days))
+        return self._current_day(connection, plan_id, total_days)
 
     def _day_completed(self, connection: sqlite3.Connection, plan_id: int, day: int) -> bool:
         row = connection.execute(

@@ -84,6 +84,23 @@ def api_grifo():
     return jsonify(resultado)
 
 
+@bp.post("/api/estudo/grifo-lote")
+def api_grifo_lote():
+    payload = request.get_json(silent=True) or {}
+    abbrev = str(payload.get("abbrev", "")).strip()
+    capitulo = payload.get("capitulo")
+    versiculos = payload.get("versiculos")
+    if not abbrev or not isinstance(capitulo, int) or not isinstance(versiculos, list) or not versiculos:
+        return jsonify({"erro": "Referência inválida."}), 400
+    if not all(isinstance(v, int) for v in versiculos):
+        return jsonify({"erro": "Lista de versículos inválida."}), 400
+    try:
+        resultado = _study().set_highlights_batch(abbrev, capitulo, versiculos, payload.get("cor"))
+    except ValueError as exc:
+        return jsonify({"erro": str(exc)}), 400
+    return jsonify(resultado)
+
+
 @bp.post("/api/estudo/favorito")
 def api_favorito():
     payload = request.get_json(silent=True) or {}

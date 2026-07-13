@@ -18,6 +18,7 @@ from app.core.text import markdown_to_html
 from app.core.turso import TursoClient
 from app.core.user_data import UserDataManager
 from app.core.version import current_version_id
+from app.study.chapter_study import ChapterStudyService
 from app.study.themes import ThemeService
 
 # Endpoints acessiveis sem login.
@@ -32,10 +33,11 @@ class Services:
     """Container de dependencias compartilhadas (injecao simples)."""
 
     library: BibleLibrary
-    bible: BibleRepository       # versao padrao (canon), leitura global
-    themes: ThemeService         # global (somente leitura)
-    auth: AuthRepository         # contas
-    user_data: UserDataManager   # repositorios por usuario (isolados)
+    bible: BibleRepository        # versao padrao (canon), leitura global
+    themes: ThemeService          # global (somente leitura)
+    auth: AuthRepository          # contas
+    user_data: UserDataManager    # repositorios por usuario (isolados)
+    chapter_study: ChapterStudyService  # sintese teologica por capitulo (global)
 
 
 def create_app(config_object: type[Config] = Config) -> Flask:
@@ -55,6 +57,12 @@ def create_app(config_object: type[Config] = Config) -> Flask:
         themes=ThemeService(bible, config_object.THEMES_PATH),
         auth=AuthRepository(sqlite_path=config_object.AUTH_DB, turso=turso),
         user_data=UserDataManager(bible, config_object.USERS_DIR, turso=turso),
+        chapter_study=ChapterStudyService(
+            config_object.CHAPTER_STUDY_DB,
+            config_object.ANTHROPIC_API_KEY,
+            config_object.CHAPTER_STUDY_MODEL,
+            turso=turso,
+        ),
     )
 
     app.jinja_env.filters["markdown"] = markdown_to_html
