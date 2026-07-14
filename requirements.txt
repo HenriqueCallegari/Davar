@@ -2,4 +2,3 @@ Flask
 gunicorn
 jinja2
 python-dotenv
-anthropic

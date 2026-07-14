@@ -57,12 +57,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
         themes=ThemeService(bible, config_object.THEMES_PATH),
         auth=AuthRepository(sqlite_path=config_object.AUTH_DB, turso=turso),
         user_data=UserDataManager(bible, config_object.USERS_DIR, turso=turso),
-        chapter_study=ChapterStudyService(
-            config_object.CHAPTER_STUDY_DB,
-            config_object.ANTHROPIC_API_KEY,
-            config_object.CHAPTER_STUDY_MODEL,
-            turso=turso,
-        ),
+        chapter_study=ChapterStudyService(config_object.CHAPTER_STUDIES_DIR),
     )
 
     app.jinja_env.filters["markdown"] = markdown_to_html
