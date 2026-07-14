@@ -89,6 +89,15 @@ class StudyRepository:
                     FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
                     UNIQUE (collection_id, abbrev, capitulo, versiculo)
                 );
+
+                CREATE TABLE IF NOT EXISTS chapter_notes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    abbrev TEXT NOT NULL,
+                    capitulo INTEGER NOT NULL,
+                    texto TEXT NOT NULL DEFAULT '',
+                    atualizado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (abbrev, capitulo)
+                );
                 """
             )
 
@@ -205,6 +214,46 @@ class StudyRepository:
                 ).fetchall()
             }
         return {"highlights": highlights, "favorites": favorites, "notes": notes}
+
+    # ---- reflexao do capitulo ("O que Deus falou comigo") ------------
+    def get_chapter_note(self, abbrev: str, chapter: int) -> str:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT texto FROM chapter_notes WHERE abbrev = ? AND capitulo = ?",
+                (abbrev, chapter),
+            ).fetchone()
+        return row["texto"] if row else ""
+
+    def save_chapter_note(self, abbrev: str, chapter: int, texto: str) -> dict[str, Any]:
+        now = datetime.now().isoformat(timespec="seconds")
+        with self._connect() as connection:
+            if not texto.strip():
+                connection.execute(
+                    "DELETE FROM chapter_notes WHERE abbrev = ? AND capitulo = ?",
+                    (abbrev, chapter),
+                )
+                return {"salvo": True, "removido": True}
+            connection.execute(
+                """
+                INSERT INTO chapter_notes (abbrev, capitulo, texto, atualizado_em)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(abbrev, capitulo) DO UPDATE SET texto = excluded.texto, atualizado_em = excluded.atualizado_em
+                """,
+                (abbrev, chapter, texto, now),
+            )
+        return {"salvo": True, "atualizado_em": now}
+
+    def list_chapter_notes(self) -> list[dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT abbrev, capitulo, texto, atualizado_em FROM chapter_notes ORDER BY atualizado_em DESC"
+            ).fetchall()
+        result = []
+        for row in rows:
+            data = dict(row)
+            data["reference"] = "%s %d" % (self.bible.book_name(row["abbrev"]), row["capitulo"])
+            result.append(data)
+        return result
 
     # ---- painel de estudo --------------------------------------------
     def list_highlights(self) -> list[dict[str, Any]]:

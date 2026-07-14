@@ -119,6 +119,16 @@ def api_nota():
     return jsonify(_study().save_note(*ref, str(payload.get("texto", "")), str(payload.get("tags", ""))))
 
 
+@bp.post("/api/estudo/reflexao")
+def api_reflexao():
+    payload = request.get_json(silent=True) or {}
+    abbrev = str(payload.get("abbrev", "")).strip()
+    capitulo = payload.get("capitulo")
+    if not abbrev or not isinstance(capitulo, int):
+        return jsonify({"erro": "Referência inválida."}), 400
+    return jsonify(_study().save_chapter_note(abbrev, capitulo, str(payload.get("texto", ""))))
+
+
 @bp.post("/api/estudo/colecoes")
 def api_criar_colecao():
     payload = request.get_json(silent=True) or {}

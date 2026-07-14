@@ -401,7 +401,9 @@
       });
   }
 
+  var studyEndBtn = document.getElementById("studyEndBtn");
   if (studyBtn) studyBtn.addEventListener("click", openStudy);
+  if (studyEndBtn) studyEndBtn.addEventListener("click", openStudy);
   if (studyCloseBtn) studyCloseBtn.addEventListener("click", closeStudy);
   if (studyConfirmClose) studyConfirmClose.addEventListener("click", closeStudy);
   if (studyConfirmBtn) studyConfirmBtn.addEventListener("click", loadStudy);
@@ -413,4 +415,31 @@
   document.addEventListener("keydown", function (ev) {
     if (ev.key === "Escape" && !studyOverlay.hidden) closeStudy();
   });
+
+  // ---------- Reflexão do capítulo: "O que Deus falou comigo" ----------
+  var reflexao = document.getElementById("chapterReflection");
+  var reflexaoStatus = document.getElementById("reflexaoStatus");
+  if (reflexao) {
+    var reflexaoTimer = null;
+    var setReflexaoStatus = function (text, saved) {
+      if (!reflexaoStatus) return;
+      reflexaoStatus.textContent = text;
+      reflexaoStatus.classList.toggle("is-saved", Boolean(saved));
+    };
+    reflexao.addEventListener("input", function () {
+      clearTimeout(reflexaoTimer);
+      setReflexaoStatus("Salvando…", false);
+      reflexaoTimer = setTimeout(function () {
+        window.postJSON("/api/estudo/reflexao", {
+          abbrev: reflexao.dataset.abbrev,
+          capitulo: Number(reflexao.dataset.chapter),
+          texto: reflexao.value
+        }).then(function () {
+          setReflexaoStatus("Salvo automaticamente", true);
+        }).catch(function () {
+          setReflexaoStatus("Não foi possível salvar", false);
+        });
+      }, 600);
+    });
+  }
 })();

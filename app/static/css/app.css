@@ -74,6 +74,9 @@
 /* ---------- BASE ---------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* O atributo hidden deve sempre esconder, mesmo com display definido no CSS. */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -739,3 +742,16 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 .study-confirm__note { color: var(--text-faint); font-size: var(--step--1); }
 .study-confirm__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; justify-content: center; margin-top: var(--sp-2); }
 .study-empty { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+
+/* ---------- FIM DO CAPÍTULO: reflexão + estudo ---------- */
+.chapter-end { margin-top: var(--sp-6); display: grid; gap: var(--sp-4); border-top: 1px solid var(--line); padding-top: var(--sp-5); }
+.reflexao-card .section-heading { margin-bottom: var(--sp-3); }
+.reflexao-textarea {
+  width: 100%; min-height: 160px; resize: vertical; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: var(--sp-3);
+  background: var(--surface); color: var(--text); font: var(--step-0)/1.7 var(--font-serif);
+}
+.reflexao-textarea:focus { outline: none; box-shadow: var(--ring); border-color: var(--accent); }
+.reflexao-card .save-status { display: inline-block; margin-top: var(--sp-2); }
+.study-end-cta { justify-self: start; padding: .85rem 1.4rem; }
+@media (max-width: 560px) { .study-end-cta { justify-self: stretch; } }

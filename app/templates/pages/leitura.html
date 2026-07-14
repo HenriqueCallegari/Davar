@@ -57,6 +57,20 @@
   {% endfor %}
 </ol>
 
+<section class="chapter-end">
+  <article class="card card--pad reflexao-card">
+    <div class="section-heading">
+      <div><p class="eyebrow">Seu tempo com Deus</p><h2>O que Deus falou comigo</h2></div>
+    </div>
+    <textarea id="chapterReflection" class="reflexao-textarea"
+      data-abbrev="{{ abbrev }}" data-chapter="{{ num }}"
+      placeholder="Escreva aqui o que o Senhor falou ao seu coração neste capítulo…">{{ reflexao }}</textarea>
+    <span id="reflexaoStatus" class="save-status" aria-live="polite">Salvo automaticamente</span>
+  </article>
+
+  <button id="studyEndBtn" class="btn btn--primary study-end-cta" type="button">Estudar este capítulo</button>
+</section>
+
 <div id="selectBar" class="select-bar" hidden>
   <span class="select-bar__count"><strong id="selectCount">0</strong> selecionado(s)</span>
   <div class="select-bar__swatches">

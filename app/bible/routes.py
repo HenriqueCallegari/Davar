@@ -88,6 +88,7 @@ def capitulo(abbrev: str, num: int):
         verses=verse_rows,
         navigation=bible.chapter_navigation(abbrev, num),
         plano_id=request.args.get("plano", type=int),
+        reflexao=study.get_chapter_note(book["abbrev"], num),
     )
 
 
