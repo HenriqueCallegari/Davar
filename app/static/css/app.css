@@ -732,3 +732,10 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 @media (max-width: 620px) {
   .study-panel { width: 100%; }
 }
+
+/* ---------- ESTUDO: confirmação + retry ---------- */
+.study-confirm { padding: var(--sp-6) var(--sp-4); text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+.study-confirm p { color: var(--text-soft); max-width: 42ch; line-height: 1.6; }
+.study-confirm__note { color: var(--text-faint); font-size: var(--step--1); }
+.study-confirm__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; justify-content: center; margin-top: var(--sp-2); }
+.study-empty { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }

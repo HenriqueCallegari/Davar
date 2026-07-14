@@ -286,37 +286,47 @@
   var studyBtn = document.getElementById("studyTabBtn");
   var studyOverlay = document.getElementById("studyOverlay");
   var studyCloseBtn = document.getElementById("studyCloseBtn");
+  var studyConfirm = document.getElementById("studyConfirm");
   var studyLoading = document.getElementById("studyLoading");
   var studyContentEl = document.getElementById("studyContent");
   var studyEmptyEl = document.getElementById("studyEmpty");
   var studyEmptyText = document.getElementById("studyEmptyText");
   var studyCancelBtn = document.getElementById("studyCancelBtn");
+  var studyConfirmBtn = document.getElementById("studyConfirmBtn");
+  var studyConfirmClose = document.getElementById("studyConfirmClose");
+  var studyRetryBtn = document.getElementById("studyRetryBtn");
   var studyCache = null;
   var studyController = null;
+  var studyTimer = null;
 
+  function abortStudy() {
+    if (studyTimer) { clearTimeout(studyTimer); studyTimer = null; }
+    if (studyController) { studyController.abort(); studyController = null; }
+  }
+
+  // Abrir: NUNCA carrega automaticamente — mostra a confirmação primeiro
+  // (ou o conteúdo, se já tiver sido carregado nesta visita).
   function openStudy() {
     studyOverlay.hidden = false;
     document.body.classList.add("study-open");
-    if (studyCache) { renderStudy(studyCache); return; }
-    loadStudy();
+    if (studyCache && studyCache.disponivel) { renderStudy(studyCache); return; }
+    setStudyState("confirm");
   }
   function closeStudy() {
-    if (studyController) { studyController.abort(); studyController = null; }
+    abortStudy();
     studyOverlay.hidden = true;
     document.body.classList.remove("study-open");
   }
-  function cancelStudy() {
-    if (studyController) { studyController.abort(); studyController = null; }
-    closeStudy();
-  }
   function setStudyState(state) {
+    if (studyConfirm) studyConfirm.hidden = state !== "confirm";
     studyLoading.hidden = state !== "loading";
     studyContentEl.hidden = state !== "content";
     studyEmptyEl.hidden = state !== "empty";
   }
   function renderStudy(data) {
-    if (!data.disponivel) {
-      studyEmptyText.textContent = data.motivo || "Não foi possível carregar o estudo deste capítulo.";
+    if (!data || !data.disponivel) {
+      studyEmptyText.textContent = (data && data.motivo) || "Não foi possível carregar o estudo deste capítulo.";
+      if (studyRetryBtn) studyRetryBtn.hidden = false;
       setStudyState("empty");
       return;
     }
@@ -329,7 +339,7 @@
   function paragraphsHtml(text) {
     if (!text) return "";
     return String(text).split(/\n+/).filter(Boolean).map(function (p) {
-      return "<p></p>".replace("</p>", escapeHtml(p) + "</p>");
+      return "<p>" + escapeHtml(p) + "</p>";
     }).join("");
   }
   function fillList(el, items) {
@@ -345,27 +355,58 @@
     div.textContent = s;
     return div.innerHTML;
   }
+  function showStudyError(msg) {
+    abortStudy();
+    studyEmptyText.textContent = msg;
+    if (studyRetryBtn) studyRetryBtn.hidden = false;
+    setStudyState("empty");
+  }
   function loadStudy() {
+    abortStudy();
     setStudyState("loading");
     studyController = new AbortController();
-    fetch("/api/estudo-capitulo/" + ABBREV + "/" + CHAPTER, { signal: studyController.signal })
-      .then(function (r) { return r.json(); })
+    // Timeout de segurança: nunca fica carregando para sempre.
+    studyTimer = setTimeout(function () {
+      if (studyController) studyController.abort();
+      showStudyError("O carregamento demorou mais que o esperado. Verifique sua conexão e tente novamente.");
+    }, 15000);
+
+    fetch("/api/estudo-capitulo/" + ABBREV + "/" + CHAPTER, {
+      signal: studyController.signal,
+      headers: { "Accept": "application/json" },
+      credentials: "same-origin"
+    })
+      .then(function (r) {
+        // Sessão expirada: a API redireciona para o login (HTML), não JSON.
+        if (r.redirected || (r.headers.get("Content-Type") || "").indexOf("application/json") === -1) {
+          throw new Error("sessao");
+        }
+        return r.json();
+      })
       .then(function (data) {
+        if (studyTimer) { clearTimeout(studyTimer); studyTimer = null; }
         studyController = null;
         studyCache = data;
         renderStudy(data);
       })
       .catch(function (err) {
-        if (err && err.name === "AbortError") return; // cancelado pelo usuário
+        if (err && err.name === "AbortError") return; // cancelado/timeout já tratado
+        if (studyTimer) { clearTimeout(studyTimer); studyTimer = null; }
         studyController = null;
-        studyEmptyText.textContent = "Não foi possível carregar o estudo agora. Tente novamente.";
-        setStudyState("empty");
+        if (err && err.message === "sessao") {
+          showStudyError("Sua sessão expirou. Recarregue a página e faça login novamente.");
+        } else {
+          showStudyError("Não foi possível carregar o estudo agora. Tente novamente.");
+        }
       });
   }
 
   if (studyBtn) studyBtn.addEventListener("click", openStudy);
   if (studyCloseBtn) studyCloseBtn.addEventListener("click", closeStudy);
-  if (studyCancelBtn) studyCancelBtn.addEventListener("click", cancelStudy);
+  if (studyConfirmClose) studyConfirmClose.addEventListener("click", closeStudy);
+  if (studyConfirmBtn) studyConfirmBtn.addEventListener("click", loadStudy);
+  if (studyCancelBtn) studyCancelBtn.addEventListener("click", function () { abortStudy(); setStudyState("confirm"); });
+  if (studyRetryBtn) studyRetryBtn.addEventListener("click", loadStudy);
   if (studyOverlay) studyOverlay.addEventListener("click", function (ev) {
     if (ev.target === studyOverlay) closeStudy();
   });

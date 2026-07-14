@@ -110,6 +110,14 @@
       <button id="studyCloseBtn" class="btn btn--ghost" type="button" aria-label="Fechar">Fechar</button>
     </div>
     <div class="study-panel__body" id="studyBody">
+      <div class="study-confirm" id="studyConfirm" hidden>
+        <p>Este é um estudo aprofundado do capítulo — resumo, contexto, mensagens-chave e perguntas de reflexão.</p>
+        <p class="study-confirm__note">O carregamento pode levar alguns instantes.</p>
+        <div class="study-confirm__actions">
+          <button id="studyConfirmBtn" class="btn btn--primary" type="button">Carregar estudo</button>
+          <button id="studyConfirmClose" class="btn btn--ghost" type="button">Agora não</button>
+        </div>
+      </div>
       <div class="study-loading" id="studyLoading" hidden>
         <div class="study-spinner" aria-hidden="true"></div>
         <p>Carregando o estudo, isso pode demorar alguns instantes.</p>
@@ -135,6 +143,7 @@
       </div>
       <div class="study-empty" id="studyEmpty" hidden>
         <p id="studyEmptyText"></p>
+        <button id="studyRetryBtn" class="btn btn--soft" type="button" hidden>Tentar novamente</button>
       </div>
     </div>
   </div>
