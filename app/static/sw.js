@@ -1,7 +1,7 @@
 /* Service worker — app shell.
    CSS/JS: network-first (sempre pega a versão nova; cai no cache offline).
    Ícones e demais estáticos: cache-first. Áudio: nunca cacheado (respostas 206). */
-const CACHE = "davar-v3";
+const CACHE = "davar-v4";
 const ASSETS = [
   "/static/css/app.css",
   "/static/js/app.js",

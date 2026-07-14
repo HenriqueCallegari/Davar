@@ -290,7 +290,9 @@
   var studyContentEl = document.getElementById("studyContent");
   var studyEmptyEl = document.getElementById("studyEmpty");
   var studyEmptyText = document.getElementById("studyEmptyText");
+  var studyCancelBtn = document.getElementById("studyCancelBtn");
   var studyCache = null;
+  var studyController = null;
 
   function openStudy() {
     studyOverlay.hidden = false;
@@ -299,8 +301,13 @@
     loadStudy();
   }
   function closeStudy() {
+    if (studyController) { studyController.abort(); studyController = null; }
     studyOverlay.hidden = true;
     document.body.classList.remove("study-open");
+  }
+  function cancelStudy() {
+    if (studyController) { studyController.abort(); studyController = null; }
+    closeStudy();
   }
   function setStudyState(state) {
     studyLoading.hidden = state !== "loading";
@@ -340,13 +347,17 @@
   }
   function loadStudy() {
     setStudyState("loading");
-    fetch("/api/estudo-capitulo/" + ABBREV + "/" + CHAPTER)
+    studyController = new AbortController();
+    fetch("/api/estudo-capitulo/" + ABBREV + "/" + CHAPTER, { signal: studyController.signal })
       .then(function (r) { return r.json(); })
       .then(function (data) {
+        studyController = null;
         studyCache = data;
         renderStudy(data);
       })
-      .catch(function () {
+      .catch(function (err) {
+        if (err && err.name === "AbortError") return; // cancelado pelo usuário
+        studyController = null;
         studyEmptyText.textContent = "Não foi possível carregar o estudo agora. Tente novamente.";
         setStudyState("empty");
       });
@@ -354,6 +365,7 @@
 
   if (studyBtn) studyBtn.addEventListener("click", openStudy);
   if (studyCloseBtn) studyCloseBtn.addEventListener("click", closeStudy);
+  if (studyCancelBtn) studyCancelBtn.addEventListener("click", cancelStudy);
   if (studyOverlay) studyOverlay.addEventListener("click", function (ev) {
     if (ev.target === studyOverlay) closeStudy();
   });
