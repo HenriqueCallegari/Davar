@@ -123,6 +123,7 @@ def _register_shared(app: Flask) -> None:
                 {"endpoint": "dashboard.crescimento", "label": "Crescimento"},
                 {"endpoint": "gamification.hub", "label": "Jogos"},
                 {"endpoint": "gamification.conquistas", "label": "Conquistas"},
+                {"endpoint": "dashboard.novidades", "label": "Novidades"},
             ]
         }
 

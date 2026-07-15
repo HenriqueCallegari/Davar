@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Novidades — DAVAR{% endblock %}
+{% block content %}
+<div class="news">
+  <div class="page-head">
+    <p class="eyebrow">Novidades</p>
+    <h1>O que há de novo</h1>
+    <p class="page-head__sub">Notas de atualização e o que estamos preparando para os próximos capítulos do DAVAR.</p>
+  </div>
+
+  <section class="news-section" aria-label="Últimas atualizações">
+    <h2 class="news-section__title">Últimas atualizações</h2>
+
+    <article class="card news-card">
+      <header class="news-card__head">
+        <span class="news-badge news-badge--new">v1.1 · Novo</span>
+        <h3 class="news-card__title">Estudos do Novo Testamento</h3>
+      </header>
+      <p class="news-card__lead">Estudos completos do Novo Testamento agora disponíveis.</p>
+      <ul class="news-list">
+        <li><strong>260 capítulos</strong> estudados, cobrindo os <strong>27 livros</strong> do Novo Testamento.</li>
+        <li>Botão <em>“Estude o Capítulo”</em> com confirmação prévia e mensagem de carregamento.</li>
+        <li>Seleção múltipla de versículos e salto de dia no plano de leitura.</li>
+        <li>Nova aba de reflexão <em>“O que Deus falou comigo”</em> no painel de estudo.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="news-section" aria-label="Ideias futuras">
+    <h2 class="news-section__title">Ideias futuras</h2>
+
+    <article class="card news-card news-card--future">
+      <header class="news-card__head">
+        <span class="news-badge news-badge--soon">Em breve</span>
+        <h3 class="news-card__title">Estudos do Antigo Testamento</h3>
+      </header>
+      <p class="news-card__lead">O próximo grande passo: levar os estudos capítulo a capítulo para todo o Antigo Testamento.</p>
+      <ul class="news-list">
+        <li>Cobertura completa dos <strong>39 livros</strong>, de Gênesis a Malaquias.</li>
+        <li>Mesmo formato de estudo já disponível no Novo Testamento.</li>
+        <li>Reflexões e aplicações guiadas para cada capítulo.</li>
+      </ul>
+      <p class="news-card__note">Estamos trabalhando nisso aos poucos — obrigado por caminhar junto. 🙏</p>
+    </article>
+  </section>
+</div>
+{% endblock %}

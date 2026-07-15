@@ -38,6 +38,11 @@ def crescimento():
     return render_template("pages/crescimento.html", dados=dados)
 
 
+@bp.route("/novidades")
+def novidades():
+    return render_template("pages/novidades.html")
+
+
 @bp.route("/sobre")
 def sobre():
     joao316 = current_app.services.bible.verse_text("jo", 3, 16)
