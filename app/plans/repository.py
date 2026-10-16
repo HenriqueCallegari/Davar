@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from app.config import Config
+from app.core import clock
+from app.core.db import connect
 
 DATABASE_PATH = Config.DATABASE_PATH
 ANNUAL_PLAN_YEAR = Config.ANNUAL_PLAN_YEAR
@@ -58,10 +60,7 @@ class ReadingPlanRepository:
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.db_path)
-        connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA foreign_keys = ON")
-        return connection
+        return connect(self.db_path)
 
     def _initialize(self) -> None:
         with self._connect() as connection:

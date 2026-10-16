@@ -19,7 +19,7 @@ from app.core.security import (
 )
 from app.core.text import markdown_to_html
 from app.core.turso import TursoClient
-from app.core.user_data import UserDataManager
+from app.core.user_data import UserDataManager, UserDataUnavailable
 from app.core.version import current_version_id
 from app.study.chapter_study import ChapterStudyService
 from app.study.themes import ThemeService
@@ -60,7 +60,8 @@ def create_app(config_object: type[Config] = Config) -> Flask:
         bible=bible,
         themes=ThemeService(bible, config_object.THEMES_PATH),
         auth=AuthRepository(sqlite_path=config_object.AUTH_DB, turso=turso),
-        user_data=UserDataManager(bible, config_object.USERS_DIR, turso=turso),
+        user_data=UserDataManager(bible, config_object.USERS_DIR, turso=turso,
+                                  backup_delay=config_object.BACKUP_DEBOUNCE_SECONDS),
         chapter_study=ChapterStudyService(config_object.CHAPTER_STUDIES_DIR),
     )
 
@@ -152,6 +153,16 @@ def _register_shared(app: Flask) -> None:
                 {"endpoint": "gamification.conquistas", "label": "Conquistas"},
             ]
         }
+
+    @app.errorhandler(UserDataUnavailable)
+    def user_data_unavailable(_error):
+        # Restauracao do backup falhou: nao abre (nem recria) o banco do usuario.
+        mensagem = "Seus dados estão temporariamente indisponíveis. Tente novamente em instantes."
+        if request.path.startswith("/api/"):
+            return jsonify({"erro": mensagem}), 503
+        response = make_response(render_template("pages/error.html", code=503, mensagem=mensagem), 503)
+        response.headers["Retry-After"] = "30"
+        return response
 
     @app.errorhandler(404)
     def not_found(_error):
