@@ -62,13 +62,47 @@ def tema(slug: str):
 
 
 # ---- APIs ------------------------------------------------------------
-def _ref(payload: dict) -> tuple[str, int, int] | None:
-    abbrev = str(payload.get("abbrev", "")).strip()
+MAX_VERSE_NOTE = 5_000
+MAX_CHAPTER_NOTE = 10_000
+MAX_TAGS = 200
+MAX_COLLECTION_NAME = 100
+MAX_COLLECTION_DESC = 500
+MAX_BATCH = 200
+
+
+def _is_int(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _canonical_book(abbrev) -> dict | None:
+    """Livro do canone (a referencia e identica em qualquer versao)."""
+    return current_app.services.bible.get_book(str(abbrev or "").strip())
+
+
+def _chapter_ref(payload: dict) -> tuple[str, int] | None:
+    book = _canonical_book(payload.get("abbrev"))
     capitulo = payload.get("capitulo")
+    if book is None or not _is_int(capitulo) or not 1 <= capitulo <= len(book["chapters"]):
+        return None
+    return book["abbrev"], capitulo
+
+
+def _ref(payload: dict) -> tuple[str, int, int] | None:
+    chapter = _chapter_ref(payload)
     versiculo = payload.get("versiculo")
-    if not abbrev or not isinstance(capitulo, int) or not isinstance(versiculo, int):
+    if chapter is None or not _is_int(versiculo):
+        return None
+    abbrev, capitulo = chapter
+    total = len(current_app.services.bible.get_chapter(abbrev, capitulo) or [])
+    if not 1 <= versiculo <= total:
         return None
     return abbrev, capitulo, versiculo
+
+
+def _too_long(texto: str, limit: int, what: str):
+    if len(texto) > limit:
+        return jsonify({"erro": f"{what} pode ter no máximo {limit} caracteres."}), 400
+    return None
 
 
 @bp.post("/api/estudo/grifo")
@@ -87,12 +121,16 @@ def api_grifo():
 @bp.post("/api/estudo/grifo-lote")
 def api_grifo_lote():
     payload = request.get_json(silent=True) or {}
-    abbrev = str(payload.get("abbrev", "")).strip()
-    capitulo = payload.get("capitulo")
+    chapter = _chapter_ref(payload)
     versiculos = payload.get("versiculos")
     if not abbrev or not isinstance(capitulo, int) or not isinstance(versiculos, list) or not versiculos:
         return jsonify({"erro": "Referência inválida."}), 400
-    if not all(isinstance(v, int) for v in versiculos):
+    if len(versiculos) > MAX_BATCH or not all(_is_int(v) for v in versiculos):
+        return jsonify({"erro": "Lista de versículos inválida."}), 400
+    abbrev, capitulo = chapter
+    total = len(current_app.services.bible.get_chapter(abbrev, capitulo) or [])
+    versiculos = sorted({v for v in versiculos if 1 <= v <= total})
+    if not versiculos:
         return jsonify({"erro": "Lista de versículos inválida."}), 400
     try:
         resultado = _study().set_highlights_batch(abbrev, capitulo, versiculos, payload.get("cor"))
@@ -116,26 +154,38 @@ def api_nota():
     ref = _ref(payload)
     if ref is None:
         return jsonify({"erro": "Referência inválida."}), 400
-    return jsonify(_study().save_note(*ref, str(payload.get("texto", "")), str(payload.get("tags", ""))))
+    texto, tags = str(payload.get("texto", "")), str(payload.get("tags", ""))
+    erro = _too_long(texto, MAX_VERSE_NOTE, "A anotação") or _too_long(tags, MAX_TAGS, "As tags")
+    if erro:
+        return erro
+    return jsonify(_study().save_note(*ref, texto, tags))
 
 
 @bp.post("/api/estudo/reflexao")
 def api_reflexao():
     payload = request.get_json(silent=True) or {}
-    abbrev = str(payload.get("abbrev", "")).strip()
-    capitulo = payload.get("capitulo")
-    if not abbrev or not isinstance(capitulo, int):
+    chapter = _chapter_ref(payload)
+    if chapter is None:
         return jsonify({"erro": "Referência inválida."}), 400
-    return jsonify(_study().save_chapter_note(abbrev, capitulo, str(payload.get("texto", ""))))
+    texto = str(payload.get("texto", ""))
+    erro = _too_long(texto, MAX_CHAPTER_NOTE, "A reflexão")
+    if erro:
+        return erro
+    return jsonify(_study().save_chapter_note(*chapter, texto))
 
 
 @bp.post("/api/estudo/colecoes")
 def api_criar_colecao():
     payload = request.get_json(silent=True) or {}
     nome = str(payload.get("nome", "")).strip()
+    descricao = str(payload.get("descricao", ""))
     if not nome:
         return jsonify({"erro": "Informe um nome para a coleção."}), 400
-    return jsonify(_study().create_collection(nome, str(payload.get("descricao", ""))))
+    erro = (_too_long(nome, MAX_COLLECTION_NAME, "O nome")
+            or _too_long(descricao, MAX_COLLECTION_DESC, "A descrição"))
+    if erro:
+        return erro
+    return jsonify(_study().create_collection(nome, descricao))
 
 
 @bp.delete("/api/estudo/colecoes/<int:collection_id>")
@@ -150,6 +200,8 @@ def api_add_item(collection_id: int):
     ref = _ref(payload)
     if ref is None:
         return jsonify({"erro": "Referência inválida."}), 400
+    if not _study().collection_exists(collection_id):
+        return jsonify({"erro": "Coleção não encontrada."}), 404
     return jsonify(_study().add_to_collection(collection_id, *ref))
 
 

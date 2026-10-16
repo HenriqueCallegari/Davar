@@ -9,14 +9,14 @@ SESSION_KEY = "user_id"
 
 
 def login_user(user: dict[str, Any]) -> None:
+    session.clear()  # descarta qualquer sessao/token anterior (session fixation)
     session[SESSION_KEY] = user["id"]
     session["user_nome"] = user["nome"]
     session.permanent = True
 
 
 def logout_user() -> None:
-    session.pop(SESSION_KEY, None)
-    session.pop("user_nome", None)
+    session.clear()
 
 
 def current_user_id() -> int | None:

@@ -12,6 +12,7 @@ from typing import Any
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
+MIN_PASSWORD_LENGTH = 8
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -58,8 +59,10 @@ class AuthRepository:
             return {"ok": False, "erro": "Informe seu nome."}
         if not EMAIL_RE.match(email):
             return {"ok": False, "erro": "Informe um e-mail válido."}
-        if len(senha or "") < 6:
-            return {"ok": False, "erro": "A senha precisa ter ao menos 6 caracteres."}
+        if len(senha or "") < MIN_PASSWORD_LENGTH:
+            return {"ok": False, "erro": f"A senha precisa ter ao menos {MIN_PASSWORD_LENGTH} caracteres."}
+        if len(senha) > 200:
+            return {"ok": False, "erro": "A senha é longa demais."}
 
         existing = self._query("SELECT id FROM users WHERE email = ?", (email,), fetch=True)
         if existing:

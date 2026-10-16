@@ -10,6 +10,7 @@
 {% if erro %}<div class="auth-error" role="alert">{{ erro }}</div>{% endif %}
 
 <form class="auth-form" method="post" action="{{ url_for('auth.login') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="next" value="{{ next }}">
   <label class="field">
     <span>E-mail</span>

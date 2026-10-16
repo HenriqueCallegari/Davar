@@ -10,6 +10,7 @@
 {% if erro %}<div class="auth-error" role="alert">{{ erro }}</div>{% endif %}
 
 <form class="auth-form" method="post" action="{{ url_for('auth.registrar') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <label class="field">
     <span>Nome</span>
     <input type="text" name="nome" value="{{ dados.nome }}" placeholder="Como quer ser chamado" autocomplete="name" required autofocus>
@@ -20,7 +21,7 @@
   </label>
   <label class="field">
     <span>Senha</span>
-    <input type="password" name="senha" placeholder="Mínimo de 6 caracteres" autocomplete="new-password" minlength="6" required>
+    <input type="password" name="senha" placeholder="Mínimo de 8 caracteres" autocomplete="new-password" minlength="8" maxlength="200" required>
   </label>
   <button class="btn btn--primary btn--block auth-submit" type="submit">Criar conta</button>
 </form>

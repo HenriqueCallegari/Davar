@@ -313,11 +313,19 @@ class StudyRepository:
 
     def create_collection(self, nome: str, descricao: str = "") -> dict[str, Any]:
         with self._connect() as connection:
+            nome = nome.strip() or "Nova colecao"
+            descricao = descricao.strip()
             cursor = connection.execute(
                 "INSERT INTO collections (nome, descricao) VALUES (?, ?)",
-                (nome.strip() or "Nova colecao", descricao.strip()),
+                (nome, descricao),
             )
             return {"id": cursor.lastrowid, "nome": nome, "descricao": descricao}
+
+    def collection_exists(self, collection_id: int) -> bool:
+        with self._connect() as connection:
+            return connection.execute(
+                "SELECT 1 FROM collections WHERE id = ?", (collection_id,)
+            ).fetchone() is not None
 
     def delete_collection(self, collection_id: int) -> None:
         with self._connect() as connection:

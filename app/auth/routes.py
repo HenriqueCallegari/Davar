@@ -1,13 +1,12 @@
 """Rotas de autenticacao: login, registro e logout."""
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
 from flask import (
     Blueprint, current_app, redirect, render_template, request, url_for,
 )
 
 from app.core.auth import current_user_id, login_user, logout_user
+from app.core.security import safe_next_url
 
 bp = Blueprint("auth", __name__)
 
@@ -16,11 +15,7 @@ REGISTER_VERSE = ("jr", 29, 11)   # ...pensamentos de paz, e nao de mal...
 
 
 def _safe_next() -> str | None:
-    target = request.args.get("next") or request.form.get("next") or ""
-    parsed = urlparse(target)
-    if target and not parsed.netloc and not parsed.scheme and target.startswith("/"):
-        return target
-    return None
+    return safe_next_url(request.args.get("next") or request.form.get("next"))
 
 
 def _verse(ref: tuple[str, int, int]) -> dict:
@@ -42,12 +37,25 @@ def login():
     if request.method == "POST":
         email = (request.form.get("email") or "").strip()
         senha = request.form.get("senha") or ""
+        email_key = "e:" + email.lower()
+        ip_key = "i:" + (request.remote_addr or "?")
+        if (current_app.login_limiter_email.blocked(email_key)
+                or current_app.login_limiter_ip.blocked(ip_key)):
+            return _render_login(
+                "Muitas tentativas. Aguarde alguns minutos e tente novamente.", email), 429
         user = current_app.services.auth.authenticate(email, senha)
         if user:
+            current_app.login_limiter_email.reset(email_key)
             login_user(user)
             return redirect(_safe_next() or url_for("dashboard.home"))
+        current_app.login_limiter_email.fail(email_key)
+        current_app.login_limiter_ip.fail(ip_key)
         erro = "E-mail ou senha incorretos."
 
+    return _render_login(erro, email)
+
+
+def _render_login(erro: str | None, email: str):
     return render_template(
         "auth/login.html",
         versiculo=_verse(LOGIN_VERSE),

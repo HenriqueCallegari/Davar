@@ -1,12 +1,11 @@
 """Rotas do texto biblico: catalogo, leitura, busca global e troca de versao."""
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
 from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, url_for
 
 from app.config import Config
-from app.core.auth import current_study
+from app.core.auth import current_plans, current_study
+from app.core.security import safe_next_url
 from app.core.version import current_bible, current_version_id
 
 bp = Blueprint("bible", __name__)
@@ -14,11 +13,7 @@ bp = Blueprint("bible", __name__)
 
 def _safe_next(default_endpoint: str = "dashboard.home") -> str:
     """Evita open-redirect: so aceita caminhos internos."""
-    target = request.args.get("next", "")
-    parsed = urlparse(target)
-    if target and not parsed.netloc and not parsed.scheme and target.startswith("/"):
-        return target
-    return url_for(default_endpoint)
+    return safe_next_url(request.args.get("next")) or url_for(default_endpoint)
 
 
 @bp.route("/versao/<version_id>")
@@ -29,7 +24,8 @@ def trocar_versao(version_id: str):
     if library.has(version_id):
         response.set_cookie(
             Config.VERSION_COOKIE, version_id,
-            max_age=60 * 60 * 24 * 365, samesite="Lax",
+            max_age=60 * 60 * 24 * 365, samesite="Lax", httponly=True,
+            secure=current_app.config["SESSION_COOKIE_SECURE"],
         )
     return response
 

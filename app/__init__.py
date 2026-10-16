@@ -7,13 +7,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, jsonify, make_response, redirect, render_template, request, session, url_for
 
 from app.auth.repository import AuthRepository
 from app.bible.library import BibleLibrary
 from app.bible.repository import BibleRepository
 from app.config import Config
 from app.core.auth import current_user, current_user_id
+from app.core.security import (
+    UNSAFE_METHODS, AttemptLimiter, apply_security_headers, csrf_is_valid, csrf_token,
+)
 from app.core.text import markdown_to_html
 from app.core.turso import TursoClient
 from app.core.user_data import UserDataManager
@@ -43,6 +46,7 @@ class Services:
 def create_app(config_object: type[Config] = Config) -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(config_object)
+    app.config["SECRET_KEY"] = config_object.resolve_secret_key()
     config_object.ensure_dirs()
 
     turso = None
@@ -60,7 +64,18 @@ def create_app(config_object: type[Config] = Config) -> Flask:
         chapter_study=ChapterStudyService(config_object.CHAPTER_STUDIES_DIR),
     )
 
+    app.login_limiter_email = AttemptLimiter(
+        config_object.LOGIN_MAX_FAILS_PER_EMAIL, config_object.LOGIN_FAIL_WINDOW)
+    app.login_limiter_ip = AttemptLimiter(
+        config_object.LOGIN_MAX_FAILS_PER_IP, config_object.LOGIN_FAIL_WINDOW)
+
+    if config_object.is_production():
+        # Render fica atras de um proxy: sem isto o IP/esquema vistos seriam os dele.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
     app.jinja_env.filters["markdown"] = markdown_to_html
+    app.jinja_env.globals["csrf_token"] = csrf_token
     _register_blueprints(app)
     _register_shared(app)
     return app
@@ -82,11 +97,22 @@ def _register_shared(app: Flask) -> None:
     @app.before_request
     def require_login():
         endpoint = request.endpoint
-        if endpoint is None or endpoint == "static" or endpoint in PUBLIC_ENDPOINTS:
+        if endpoint is None or endpoint == "static":
             return None
-        if session.get("user_id") is None:
+        if endpoint not in PUBLIC_ENDPOINTS and session.get("user_id") is None:
+            if request.path.startswith("/api/"):
+                # fetch nao deve receber o HTML do login: responde 401 em JSON.
+                return jsonify({"erro": "Sessão expirada. Faça login novamente.",
+                                "login": url_for("auth.login")}), 401
             return redirect(url_for("auth.login", next=request.path))
+        if request.method in UNSAFE_METHODS and not csrf_is_valid():
+            if request.path.startswith("/api/"):
+                return jsonify({"erro": "Requisição inválida. Recarregue a página."}), 400
+            return render_template("pages/error.html", code=400,
+                                   mensagem="Sessão da página expirada. Volte e tente de novo."), 400
         return None
+
+    app.after_request(apply_security_headers)
 
     @app.after_request
     def sync_after_write(response):

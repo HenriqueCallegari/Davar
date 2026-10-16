@@ -19,9 +19,17 @@
     if (!wrap) return;
     var toast = document.createElement("div");
     toast.className = "toast";
-    toast.innerHTML =
-      '<span class="toast-icon">' + (icon || "✓") + "</span>" +
-      '<span class="toast-body"><strong>' + message + "</strong></span>";
+    // textContent (nunca innerHTML): a mensagem pode conter texto vindo do servidor.
+    var iconEl = document.createElement("span");
+    iconEl.className = "toast-icon";
+    iconEl.textContent = icon || "✓";
+    var body = document.createElement("span");
+    body.className = "toast-body";
+    var strong = document.createElement("strong");
+    strong.textContent = message;
+    body.appendChild(strong);
+    toast.appendChild(iconEl);
+    toast.appendChild(body);
     wrap.appendChild(toast);
     requestAnimationFrame(function () { toast.classList.add("show"); });
     setTimeout(function () {
@@ -30,17 +38,37 @@
     }, 3800);
   };
 
-  // ----- Helper de POST JSON -----
-  window.postJSON = function (url, body) {
+  // ----- Helpers de requisição JSON (token CSRF + sessão expirada) -----
+  function csrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute("content") : "";
+  }
+
+  window.apiJSON = function (method, url, body) {
     return fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: method,
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-CSRF-Token": csrfToken()
+      },
       body: JSON.stringify(body || {})
     }).then(function (r) {
+      if (r.status === 401) {
+        // Sessão expirada: leva ao login e volta para esta página depois.
+        window.showToast("Sessão expirada. Entre novamente.", "!");
+        setTimeout(function () {
+          window.location.href = "/login?next=" + encodeURIComponent(window.location.pathname);
+        }, 1200);
+        throw new Error("sessao");
+      }
       if (!r.ok) throw new Error("Falha na requisição");
       return r.json();
     });
   };
+
+  window.postJSON = function (url, body) { return window.apiJSON("POST", url, body); };
 
   // ----- Troca de versão bíblica -----
   document.querySelectorAll("[data-version-switch]").forEach(function (sel) {
