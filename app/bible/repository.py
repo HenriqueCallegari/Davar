@@ -6,6 +6,7 @@ buscas rapidas (palavra, frase, tema) sem depender de servico externo.
 from __future__ import annotations
 
 import json
+import random
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -210,6 +211,40 @@ class BibleRepository:
                 if len(found) >= limit:
                     break
         return found
+
+    def pick_verses(
+        self,
+        rng: random.Random,
+        count: int,
+        min_len: int = 40,
+        max_len: int = 220,
+        abbrev: str | None = None,
+        chapter: int | None = None,
+        testament: str | None = None,
+    ) -> list[VerseRef]:
+        """Versiculos aleatorios (sem repeticao) para jogos e exercicios.
+
+        `abbrev`/`chapter` restringem o sorteio a um livro/capitulo; `rng` permite
+        resultados reproduziveis (ex.: desafio do dia, igual para todos)."""
+        def ok(ref: VerseRef) -> bool:
+            return (min_len <= len(ref.text) <= max_len
+                    and (testament is None or ref.testament == testament))
+
+        if abbrev:
+            book_abbrev = abbrev.lower()
+            pool = [r for r in self._index
+                    if r.abbrev.lower() == book_abbrev
+                    and (chapter is None or r.chapter == chapter) and ok(r)]
+            return rng.sample(pool, min(count, len(pool)))
+
+        picked: dict[tuple[str, int, int], VerseRef] = {}
+        attempts = 0
+        while len(picked) < count and attempts < count * 80:
+            attempts += 1
+            ref = self._index[rng.randrange(len(self._index))]
+            if ok(ref):
+                picked.setdefault((ref.abbrev, ref.chapter, ref.verse), ref)
+        return list(picked.values())
 
     def verse_of_the_day(self, seed: int) -> dict[str, Any]:
         """Versiculo deterministico do dia (mesmo para todos no mesmo dia)."""

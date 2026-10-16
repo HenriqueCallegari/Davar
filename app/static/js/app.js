@@ -38,6 +38,41 @@
     }, 3800);
   };
 
+  // ----- Confete (comemorações: fim de jogo, dia concluído) -----
+  window.confetti = function () {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var canvas = document.createElement("canvas");
+    canvas.setAttribute("aria-hidden", "true");
+    canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200";
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext("2d");
+    var w = canvas.width = window.innerWidth, h = canvas.height = window.innerHeight;
+    var colors = ["#e7b53f", "#5b8fd8", "#6faa77", "#cf6b5c", "#a781cf", "#d8b878"];
+    var pieces = [];
+    for (var i = 0; i < 150; i++) {
+      pieces.push({
+        x: w / 2 + (Math.random() - .5) * w * .3, y: h * .35,
+        vx: (Math.random() - .5) * 11, vy: -Math.random() * 11 - 3,
+        size: 5 + Math.random() * 6, rot: Math.random() * 6.28, vr: (Math.random() - .5) * .35,
+        color: colors[i % colors.length]
+      });
+    }
+    var start = performance.now();
+    (function frame(now) {
+      var t = now - start;
+      ctx.clearRect(0, 0, w, h);
+      pieces.forEach(function (p) {
+        p.vy += .22; p.x += p.vx; p.y += p.vy; p.vx *= .992; p.rot += p.vr;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - t / 2600);
+        ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * .6);
+        ctx.restore();
+      });
+      if (t < 2600) requestAnimationFrame(frame); else canvas.remove();
+    })(start);
+  };
+
   // ----- Helpers de requisição JSON (token CSRF + sessão expirada) -----
   function csrfToken() {
     var meta = document.querySelector('meta[name="csrf-token"]');

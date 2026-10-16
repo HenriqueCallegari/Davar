@@ -1,27 +1,77 @@
 {% extends "base.html" %}
 {% block title %}Jogos — DAVAR{% endblock %}
 {% block content %}
+{% set icones = {
+  'completar': '<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>',
+  'montar': '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  'relampago': '<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+  'pares': '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  'quiz': '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  'ordenar': '<path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>',
+  'conquistas': '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0z"/>'
+} %}
+
 <div class="page-head">
   <p class="eyebrow">Aprender brincando</p>
   <h1>Jogos</h1>
-  <p>Pausas leves que ajudam a memorizar e a conhecer melhor a Palavra.</p>
+  <p>Pausas leves que ajudam a memorizar e a conhecer melhor a Palavra. Todos usam o texto da Bíblia na versão que você está lendo.</p>
 </div>
 
-<div class="plans-grid game-shell">
-  <a href="{{ url_for('gamification.quiz') }}" class="card game-card">
-    <h2>Quiz de Versículos</h2>
+<a class="card daily-card" href="{{ url_for('gamification.jogo', slug='completar', diario=1) }}" id="dailyCard">
+  <span class="daily-card__badge">Desafio do dia</span>
+  <h2>Complete 8 versículos</h2>
+  <p>As mesmas perguntas para todo mundo, só por hoje. Volte amanhã para um novo desafio.</p>
+  <span class="btn btn--primary" id="dailyBtn">Aceitar o desafio</span>
+</a>
+
+<h2 class="hub-title">Jogos de palavras</h2>
+<div class="hub-grid">
+  {% for slug, j in jogos.items() %}
+    <a href="{{ url_for('gamification.jogo', slug=slug) }}" class="card hub-game">
+      <svg class="hub-game__ico" viewBox="0 0 24 24" aria-hidden="true">{{ icones[slug]|safe }}</svg>
+      <span class="hub-game__tag">{{ j.eyebrow }}</span>
+      <h3>{{ j.titulo }}</h3>
+      <p>{{ j.descricao }}</p>
+    </a>
+  {% endfor %}
+</div>
+
+<h2 class="hub-title">Clássicos</h2>
+<div class="hub-grid">
+  <a href="{{ url_for('gamification.quiz') }}" class="card hub-game">
+    <svg class="hub-game__ico" viewBox="0 0 24 24" aria-hidden="true">{{ icones['quiz']|safe }}</svg>
+    <span class="hub-game__tag">Conhecimento</span>
+    <h3>Quiz de Versículos</h3>
     <p>De qual livro é este versículo? Perguntas geradas de toda a Bíblia.</p>
-    <span class="btn btn--primary">Jogar</span>
   </a>
-  <a href="{{ url_for('gamification.ordenar') }}" class="card game-card">
-    <h2>Ordene os Livros</h2>
-    <p>Coloque os livros na ordem correta. Ótimo para memorizar a sequência canônica.</p>
-    <span class="btn btn--primary">Jogar</span>
+  <a href="{{ url_for('gamification.ordenar') }}" class="card hub-game">
+    <svg class="hub-game__ico" viewBox="0 0 24 24" aria-hidden="true">{{ icones['ordenar']|safe }}</svg>
+    <span class="hub-game__tag">Memória</span>
+    <h3>Ordene os Livros</h3>
+    <p>Coloque os livros na ordem correta e memorize a sequência canônica.</p>
   </a>
-  <a href="{{ url_for('gamification.conquistas') }}" class="card game-card">
-    <h2>Conquistas</h2>
-    <p>Veja as medalhas desbloqueadas e acompanhe sua sequência de leitura.</p>
-    <span class="btn btn--ghost">Ver conquistas</span>
+  <a href="{{ url_for('gamification.conquistas') }}" class="card hub-game">
+    <svg class="hub-game__ico" viewBox="0 0 24 24" aria-hidden="true">{{ icones['conquistas']|safe }}</svg>
+    <span class="hub-game__tag">Medalhas</span>
+    <h3>Conquistas</h3>
+    <p>Veja as medalhas desbloqueadas ao longo da sua leitura.</p>
   </a>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    // Desafio do dia concluído neste aparelho (marcado pelo jogo ao terminar).
+    try {
+      var d = new Date(), key = "davar_diario_" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+      if (localStorage.getItem(key)) {
+        var card = document.getElementById("dailyCard");
+        card.classList.add("is-done");
+        card.querySelector("p").textContent = "Desafio de hoje concluído! Volte amanhã para um novo.";
+        document.getElementById("dailyBtn").textContent = "Jogar de novo";
+      }
+    } catch (e) {}
+  })();
+</script>
 {% endblock %}

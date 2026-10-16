@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ jogo.titulo }} — DAVAR{% endblock %}
+{% block content %}
+<div class="game-shell">
+  <a class="back-link" href="{{ url_for('gamification.hub') }}">← Jogos</a>
+  <div class="page-head">
+    <p class="eyebrow">{{ 'Desafio do dia · ' if diario }}{{ jogo.eyebrow }}</p>
+    <h1>{{ jogo.titulo }}</h1>
+    <p>{{ jogo.descricao }}</p>
+    {% if escopo %}
+      <p class="game-scope">Praticando: <strong>{{ escopo.rotulo }}</strong>
+        · <a href="{{ url_for('gamification.jogo', slug=slug) }}">jogar com toda a Bíblia</a></p>
+    {% endif %}
+  </div>
+
+  <div id="game" data-game="{{ slug }}"
+       data-livro="{{ escopo.abbrev if escopo else '' }}"
+       data-capitulo="{{ escopo.capitulo if escopo and escopo.capitulo else '' }}"
+       data-diario="{{ '1' if diario else '' }}">
+    <p class="muted">Carregando…</p>
+  </div>
+  <p id="gameLive" class="sr-only" aria-live="polite"></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/jogos.js') }}" defer></script>{% endblock %}

@@ -37,7 +37,9 @@
       }).then(function (d) {
         progressBar.style.width = d.progress.percent + "%";
         progressPercent.textContent = d.progress.percent + "%";
+        var wasShown = completeMessage.classList.contains("show");
         completeMessage.classList.toggle("show", Boolean(d.day_completed));
+        if (d.day_completed && !wasShown && window.confetti) window.confetti();
         (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || ""); });
         setStatus("Salvo automaticamente", true);
       }).catch(function () {
