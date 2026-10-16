@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from datetime import timedelta
 from typing import Any
 
 from app.bible.repository import BibleRepository
@@ -22,6 +23,12 @@ COLOR_MEANING = {
     "vermelho": "Alerta / correcao",
     "roxo": "Adoracao / oracao",
 }
+
+
+# Caixas de Leitner (repeticao espacada): dias ate a proxima revisao ao acertar.
+LEITNER_DAYS = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}
+MAX_BOX = max(LEITNER_DAYS)
+REVIEW_RESULTS = {"lembrei", "quase", "esqueci"}
 
 
 class StudyRepository:
@@ -86,6 +93,18 @@ class StudyRepository:
                     criado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
                     UNIQUE (collection_id, abbrev, capitulo, versiculo)
+                );
+
+                CREATE TABLE IF NOT EXISTS memorize_cards (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    abbrev TEXT NOT NULL,
+                    capitulo INTEGER NOT NULL,
+                    versiculo INTEGER NOT NULL,
+                    caixa INTEGER NOT NULL DEFAULT 1,
+                    proxima_revisao TEXT NOT NULL,
+                    ultima_revisao TEXT,
+                    criado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (abbrev, capitulo, versiculo)
                 );
 
                 CREATE TABLE IF NOT EXISTS chapter_notes (
@@ -160,6 +179,76 @@ class StudyRepository:
             )
             return {"favorito": True}
 
+    # ---- memorizacao (cartoes com repeticao espacada) -----------------
+    def toggle_memorize(self, abbrev: str, chapter: int, verse: int) -> dict[str, Any]:
+        """Adiciona o versiculo aos cartoes de memorizacao (ou remove). Novo cartao vence hoje."""
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT id FROM memorize_cards WHERE abbrev = ? AND capitulo = ? AND versiculo = ?",
+                (abbrev, chapter, verse),
+            ).fetchone()
+            if row:
+                connection.execute("DELETE FROM memorize_cards WHERE id = ?", (row["id"],))
+                return {"memorizando": False}
+            connection.execute(
+                "INSERT INTO memorize_cards (abbrev, capitulo, versiculo, proxima_revisao) VALUES (?, ?, ?, ?)",
+                (abbrev, chapter, verse, clock.today().isoformat()),
+            )
+            return {"memorizando": True}
+
+    def memorize_queue(self, limit: int = 20) -> list[dict[str, Any]]:
+        """Cartoes que vencem hoje (ou antes), os mais atrasados primeiro."""
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT abbrev, capitulo, versiculo, caixa, proxima_revisao FROM memorize_cards
+                WHERE proxima_revisao <= ?
+                ORDER BY proxima_revisao, caixa, id
+                LIMIT ?
+                """,
+                (clock.today().isoformat(), limit),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def memorize_counts(self) -> dict[str, int]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT COUNT(*) AS total,
+                       COALESCE(SUM(CASE WHEN proxima_revisao <= ? THEN 1 ELSE 0 END), 0) AS hoje
+                FROM memorize_cards
+                """,
+                (clock.today().isoformat(),),
+            ).fetchone()
+        return {"total": int(row["total"]), "hoje": int(row["hoje"])}
+
+    def memorize_review(self, abbrev: str, chapter: int, verse: int, result: str) -> dict[str, Any] | None:
+        """Registra a revisao: lembrei sobe de caixa, quase repete amanha, esqueci volta a caixa 1."""
+        if result not in REVIEW_RESULTS:
+            raise ValueError(f"Resultado invalido: {result}")
+        today = clock.today()
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT id, caixa FROM memorize_cards WHERE abbrev = ? AND capitulo = ? AND versiculo = ?",
+                (abbrev, chapter, verse),
+            ).fetchone()
+            if row is None:
+                return None
+            if result == "lembrei":
+                box = min(MAX_BOX, row["caixa"] + 1)
+                due = today + timedelta(days=LEITNER_DAYS[box])
+            elif result == "quase":
+                box = row["caixa"]
+                due = today + timedelta(days=1)
+            else:
+                box = 1
+                due = today  # continua pendente: o jogador revisa de novo na mesma sessao
+            connection.execute(
+                "UPDATE memorize_cards SET caixa = ?, proxima_revisao = ?, ultima_revisao = ? WHERE id = ?",
+                (box, due.isoformat(), today.isoformat(), row["id"]),
+            )
+            return {"caixa": box, "proxima_revisao": due.isoformat()}
+
     # ---- anotacoes ----------------------------------------------------
     def save_note(self, abbrev: str, chapter: int, verse: int, texto: str, tags: str = "") -> dict[str, Any]:
         now = clock.now().isoformat(timespec="seconds")
@@ -211,7 +300,14 @@ class StudyRepository:
                     (abbrev, chapter),
                 ).fetchall()
             }
-        return {"highlights": highlights, "favorites": favorites, "notes": notes}
+            memorize = [
+                row["versiculo"]
+                for row in connection.execute(
+                    "SELECT versiculo FROM memorize_cards WHERE abbrev = ? AND capitulo = ?",
+                    (abbrev, chapter),
+                ).fetchall()
+            ]
+        return {"highlights": highlights, "favorites": favorites, "notes": notes, "memorize": memorize}
 
     # ---- reflexao do capitulo ("O que Deus falou comigo") ------------
     def get_chapter_note(self, abbrev: str, chapter: int) -> str:

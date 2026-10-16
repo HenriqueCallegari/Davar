@@ -83,13 +83,20 @@ def capitulo(abbrev: str, num: int):
                                mensagem="Capítulo não encontrado."), 404
 
     marks = study.chapter_marks(book["abbrev"], num)
+    # Segunda versao (a primeira diferente da ativa) para a leitura comparada.
+    library = current_app.services.library
+    outras = [v for v in library.versions if v["id"] != current_version_id()]
+    alt_meta = outras[0] if outras else None
+    alt_verses = library.version(alt_meta["id"]).get_chapter(abbrev, num) or [] if alt_meta else []
     verse_rows = [
         {
             "n": index,
             "text": text,
             "cor": marks["highlights"].get(index),
             "favorito": index in marks["favorites"],
+            "memorizando": index in marks["memorize"],
             "nota": marks["notes"].get(index, {}).get("texto", ""),
+            "alt": alt_verses[index - 1] if index <= len(alt_verses) else "",
         }
         for index, text in enumerate(verses, start=1)
     ]
@@ -103,6 +110,7 @@ def capitulo(abbrev: str, num: int):
         navigation=bible.chapter_navigation(abbrev, num),
         plano_id=request.args.get("plano", type=int),
         reflexao=study.get_chapter_note(book["abbrev"], num),
+        alt_sigla=alt_meta["sigla"] if alt_meta and alt_verses else None,
     )
 
 

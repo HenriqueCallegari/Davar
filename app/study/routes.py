@@ -4,6 +4,7 @@ from __future__ import annotations
 from flask import Blueprint, current_app, jsonify, render_template, request
 
 from app.core.auth import current_study
+from app.core.version import current_bible
 from app.study.repository import COLOR_MEANING
 
 bp = Blueprint("study", __name__)
@@ -23,6 +24,7 @@ def hub():
         favorites=study.list_favorites(),
         notes=study.list_notes(),
         collections=study.list_collections(),
+        memorizar=study.memorize_counts(),
         cores=COLOR_MEANING,
     )
 
@@ -40,6 +42,11 @@ def colecao(collection_id: int):
         return render_template("pages/error.html", code=404,
                                mensagem="Coleção não encontrada."), 404
     return render_template("pages/colecao.html", colecao=data)
+
+
+@bp.route("/estudo/memorizar")
+def memorizar():
+    return render_template("pages/memorizar.html", contagem=_study().memorize_counts())
 
 
 @bp.route("/estudo/exportar")
@@ -123,7 +130,7 @@ def api_grifo_lote():
     payload = request.get_json(silent=True) or {}
     chapter = _chapter_ref(payload)
     versiculos = payload.get("versiculos")
-    if not abbrev or not isinstance(capitulo, int) or not isinstance(versiculos, list) or not versiculos:
+    if chapter is None or not isinstance(versiculos, list) or not versiculos:
         return jsonify({"erro": "Referência inválida."}), 400
     if len(versiculos) > MAX_BATCH or not all(_is_int(v) for v in versiculos):
         return jsonify({"erro": "Lista de versículos inválida."}), 400
@@ -146,6 +153,47 @@ def api_favorito():
     if ref is None:
         return jsonify({"erro": "Referência inválida."}), 400
     return jsonify(_study().toggle_favorite(*ref))
+
+
+@bp.post("/api/estudo/memorizar")
+def api_memorizar():
+    payload = request.get_json(silent=True) or {}
+    ref = _ref(payload)
+    if ref is None:
+        return jsonify({"erro": "Referência inválida."}), 400
+    return jsonify(_study().toggle_memorize(*ref))
+
+
+@bp.get("/api/estudo/memorizar/fila")
+def api_memorizar_fila():
+    """Cartoes de hoje, com o texto na versao biblica ativa."""
+    bible = current_bible()
+    cartas = []
+    for card in _study().memorize_queue():
+        texto = bible.verse_text(card["abbrev"], card["capitulo"], card["versiculo"])
+        if not texto:
+            continue
+        cartas.append({
+            **card,
+            "texto": texto,
+            "referencia": f"{bible.book_name(card['abbrev'])} {card['capitulo']}:{card['versiculo']}",
+        })
+    return jsonify({"cartas": cartas, **_study().memorize_counts()})
+
+
+@bp.post("/api/estudo/memorizar/revisar")
+def api_memorizar_revisar():
+    payload = request.get_json(silent=True) or {}
+    ref = _ref(payload)
+    if ref is None:
+        return jsonify({"erro": "Referência inválida."}), 400
+    try:
+        resultado = _study().memorize_review(*ref, str(payload.get("resultado", "")))
+    except ValueError as exc:
+        return jsonify({"erro": str(exc)}), 400
+    if resultado is None:
+        return jsonify({"erro": "Cartão não encontrado."}), 404
+    return jsonify(resultado)
 
 
 @bp.post("/api/estudo/nota")

@@ -980,6 +980,46 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 .pair-card__face--ref { font-family: var(--font-ui); font-weight: 800; font-size: 1rem; color: var(--accent); }
 .pair-card.is-matched .pair-card__face--front { border-color: var(--progress); background: color-mix(in srgb, var(--progress) 14%, var(--surface)); }
 
+/* ---- memorização ---- */
+.memo-banner {
+  display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4); margin-bottom: var(--sp-4);
+  text-decoration: none; color: inherit; border-radius: var(--radius-lg);
+  background: radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--surface));
+  transition: transform var(--tr), border-color var(--tr);
+}
+.memo-banner:hover { transform: translateY(-2px); border-color: var(--accent); }
+.memo-banner__ico { font-size: 1.6rem; color: var(--accent); }
+.memo-banner__text { display: grid; flex: 1; }
+.memo-banner__text span { color: var(--text-soft); font-size: var(--step--1); }
+.memo-count { text-align: center; color: var(--text-faint); font-size: var(--step--1); margin-bottom: var(--sp-2); }
+.memo-card { padding: var(--sp-6) var(--sp-5); text-align: center; display: grid; gap: var(--sp-4); justify-items: center; margin-top: var(--sp-3); }
+.memo-ref { font-family: var(--font-serif); font-weight: 400; font-size: var(--step-3); color: var(--accent); }
+.memo-hint { font-family: var(--font-serif); font-size: var(--step-1); letter-spacing: .06em; color: var(--text-soft); word-break: break-word; }
+.memo-verse { font-family: var(--font-serif); font-size: var(--step-2); line-height: 1.5; text-wrap: balance; }
+.memo-rate { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); width: 100%; }
+.memo-rate__btn {
+  padding: var(--sp-3); border-radius: var(--radius-sm); font: inherit; font-weight: 800; color: var(--text); cursor: pointer;
+  border: 1px solid var(--line-strong); transition: transform var(--tr), border-color var(--tr);
+}
+.memo-rate__btn:hover { transform: translateY(-2px); }
+.memo-btn--bad { background: color-mix(in srgb, var(--c-vermelho) 18%, var(--surface-2)); }
+.memo-btn--mid { background: color-mix(in srgb, var(--c-amarelo) 18%, var(--surface-2)); }
+.memo-btn--good { background: color-mix(in srgb, var(--progress) 22%, var(--surface-2)); }
+.verse.is-memo .memo-btn { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.verse.is-memo .memo-btn svg { fill: currentColor; }
+
+/* ---- leitura: comparar versões e praticar ---- */
+.verse__alt {
+  display: none; margin-top: .4rem; padding-left: .8rem; border-left: 2px solid var(--line-strong);
+  font-family: var(--font-ui); font-size: var(--step-0); line-height: 1.6; color: var(--text-soft);
+}
+.verse__alt b { color: var(--accent); margin-right: .45em; font-size: .78em; letter-spacing: .1em; }
+.compare-mode .verse__alt { display: block; }
+#compareBtn.is-active { background: var(--accent); color: #241c0d; border-color: transparent; }
+.practice-card { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.practice-card h2 { font-size: var(--step-1); }
+.practice-card__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
 @media (max-width: 700px) {
   .pairs-grid { grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
   .pair-card { min-height: 128px; }

@@ -27,6 +27,19 @@
     document.body.classList.toggle("focus-mode");
   });
 
+  // ---------- Comparar versões ----------
+  var compareBtn = document.getElementById("compareBtn");
+  if (compareBtn) {
+    var setCompare = function (on) {
+      document.body.classList.toggle("compare-mode", on);
+      compareBtn.setAttribute("aria-pressed", String(on));
+      compareBtn.classList.toggle("is-active", on);
+      try { localStorage.setItem("kja_compare", on ? "1" : "0"); } catch (e) {}
+    };
+    compareBtn.addEventListener("click", function () { setCompare(!document.body.classList.contains("compare-mode")); });
+    try { if (localStorage.getItem("kja_compare") === "1") setCompare(true); } catch (e) {}
+  }
+
   // ---------- Copiar ----------
   versesEl.addEventListener("click", function (ev) {
     var btn = ev.target.closest(".copy-btn");
@@ -48,6 +61,20 @@
       var star = btn.querySelector(".fav-star");
       if (star) star.textContent = res.favorito ? "★" : "☆";
     }).catch(function () { window.showToast("Erro ao favoritar", ""); });
+  });
+
+  // ---------- Memorizar (cartões com repetição espaçada) ----------
+  versesEl.addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".memo-btn");
+    if (!btn) return;
+    var li = btn.closest(".verse");
+    window.postJSON("/api/estudo/memorizar", {
+      abbrev: ABBREV, capitulo: CHAPTER, versiculo: Number(li.dataset.verse)
+    }).then(function (res) {
+      li.classList.toggle("is-memo", res.memorizando);
+      btn.setAttribute("aria-pressed", String(res.memorizando));
+      window.showToast(res.memorizando ? "Adicionado aos cartões de memorização" : "Removido da memorização", "");
+    }).catch(function () { window.showToast("Erro ao salvar", ""); });
   });
 
   // ---------- Selecionar vários versículos (grifo em lote) ----------

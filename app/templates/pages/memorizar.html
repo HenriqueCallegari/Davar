@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Memorizar — DAVAR{% endblock %}
+{% block content %}
+<div class="game-shell">
+  <a class="back-link" href="{{ url_for('study.hub') }}">← Meu Estudo</a>
+  <div class="page-head">
+    <p class="eyebrow">Guardar no coração</p>
+    <h1>Memorizar versículos</h1>
+    <p>Veja a referência, tente lembrar o versículo e confira. O que você lembra volta mais tarde; o que escapa volta mais cedo — assim a Palavra fica.</p>
+  </div>
+
+  <div id="memoRoot" data-total="{{ contagem.total }}" data-hoje="{{ contagem.hoje }}">
+    <p class="muted">Carregando…</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/memorizar.js') }}" defer></script>{% endblock %}

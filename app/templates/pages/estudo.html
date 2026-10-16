@@ -7,6 +7,17 @@
   <p>Grifos, anotações, favoritos e coleções — tudo o que você marcou durante a leitura, reunido e pesquisável.</p>
 </div>
 
+<a class="card memo-banner" href="{{ url_for('study.memorizar') }}">
+  <span class="memo-banner__ico" aria-hidden="true">✦</span>
+  <span class="memo-banner__text">
+    <strong>Memorizar versículos</strong>
+    <span>{% if memorizar.total == 0 %}Toque em “Memorizar” num versículo durante a leitura para criar seus cartões.
+      {% elif memorizar.hoje %}{{ memorizar.hoje }} {{ 'cartão espera' if memorizar.hoje == 1 else 'cartões esperam' }} por você hoje.
+      {% else %}Tudo revisado por hoje. Volte amanhã!{% endif %}</span>
+  </span>
+  <span class="btn btn--primary">{{ 'Revisar agora' if memorizar.hoje else 'Abrir' }}</span>
+</a>
+
 <div class="tabs" role="tablist">
   <button class="tab is-active" data-tab="grifos"> Grifos ({{ highlights|length }})</button>
   <button class="tab" data-tab="favoritos"> Favoritos ({{ favorites|length }})</button>

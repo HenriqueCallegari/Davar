@@ -15,6 +15,7 @@
   <button id="ttsBtn" class="btn btn--soft" title="Ouvir"> Ouvir</button>
   <button id="ttsPause" class="btn btn--soft" title="Pausar/continuar">⏸</button>
   <button id="focusBtn" class="btn btn--soft" title="Modo foco"> Foco</button>
+  {% if alt_sigla %}<button id="compareBtn" class="btn btn--soft" type="button" aria-pressed="false" title="Mostrar cada versículo também na {{ alt_sigla }}">Comparar {{ alt_sigla }}</button>{% endif %}
   <button id="selectModeBtn" class="btn btn--soft" title="Selecionar vários versículos" aria-pressed="false">Selecionar</button>
   <button id="studyTabBtn" class="btn btn--soft study-tab" type="button">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
@@ -32,11 +33,12 @@
 <ol class="verses" id="verses"
     data-abbrev="{{ abbrev }}" data-book="{{ name }}" data-chapter="{{ num }}" data-plano="{{ plano_id or '' }}">
   {% for v in verses %}
-    <li class="verse {% if v.cor %}hl-{{ v.cor }}{% endif %} {% if v.favorito %}is-fav{% endif %}" data-verse="{{ v.n }}">
+    <li class="verse {% if v.cor %}hl-{{ v.cor }}{% endif %} {% if v.favorito %}is-fav{% endif %} {% if v.memorizando %}is-memo{% endif %}" id="v{{ v.n }}" data-verse="{{ v.n }}">
       <span class="verse__select" aria-hidden="true"></span>
       <span class="verse__num">{{ v.n }}</span>
       <div class="verse__body">
         <span class="verse__text">{{ v.text }}</span>
+        {% if alt_sigla and v.alt %}<span class="verse__alt"><b>{{ alt_sigla }}</b> {{ v.alt }}</span>{% endif %}
         <div class="verse__actions">
           <button class="verse-act mark-btn" title="Grifar ou anotar" aria-label="Grifar ou anotar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -45,6 +47,10 @@
           <button class="verse-act fav-btn" title="Favoritar" aria-label="Favoritar">
             <span class="fav-star">{{ "★" if v.favorito else "☆" }}</span>
             <span class="verse-act__label">Favoritar</span>
+          </button>
+          <button class="verse-act memo-btn" title="Memorizar este versículo" aria-label="Memorizar este versículo" aria-pressed="{{ 'true' if v.memorizando else 'false' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            <span class="verse-act__label">Memorizar</span>
           </button>
           <button class="verse-act copy-btn" title="Copiar versículo" aria-label="Copiar versículo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
@@ -67,6 +73,14 @@
       placeholder="Escreva aqui o que o Senhor falou ao seu coração neste capítulo…">{{ reflexao }}</textarea>
     <span id="reflexaoStatus" class="save-status" aria-live="polite">Salvo automaticamente</span>
   </article>
+
+  <div class="practice-card card card--pad">
+    <div><p class="eyebrow">Fixe o que leu</p><h2>Pratique {{ name }} {{ num }}</h2></div>
+    <div class="practice-card__actions">
+      <a class="btn btn--soft" href="{{ url_for('gamification.jogo', slug='completar', livro=abbrev, capitulo=num) }}">Completar versículos</a>
+      <a class="btn btn--soft" href="{{ url_for('gamification.jogo', slug='montar', livro=abbrev, capitulo=num) }}">Montar versículos</a>
+    </div>
+  </div>
 
   <button id="studyEndBtn" class="btn btn--primary study-end-cta" type="button">Estudar este capítulo</button>
 </section>
