@@ -40,9 +40,7 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY") or None
 
     # Dados estaticos
-    BIBLE_PATH = Path(os.environ.get("BIBLE_PATH", DATA_DIR / "biblia.json"))
     THEMES_PATH = Path(os.environ.get("THEMES_PATH", DATA_DIR / "themes.json"))
-    DEVOTIONALS_PATH = Path(os.environ.get("DEVOTIONALS_PATH", DATA_DIR / "devocionais.json"))
     CHAPTER_STUDIES_DIR = Path(os.environ.get("CHAPTER_STUDIES_DIR", DATA_DIR / "estudos"))
 
     # Versoes biblicas disponiveis. A primeira com default=True define o canon.
@@ -53,14 +51,6 @@ class Config:
          "path": DATA_DIR / "ntlh.json"},
     ]
     VERSION_COOKIE = "kja_version"
-
-    # Banco de dados de progresso/estudo. Mantem compatibilidade com a env antiga.
-    DATABASE_PATH = Path(
-        os.environ.get(
-            "READING_PLANS_DB",
-            os.environ.get("DATABASE_PATH", INSTANCE_DIR / "bibliakja.sqlite3"),
-        )
-    )
 
     # Autenticacao: banco de contas + diretorio com um banco por usuario.
     AUTH_DB = Path(os.environ.get("AUTH_DB", INSTANCE_DIR / "auth.sqlite3"))
@@ -118,11 +108,9 @@ class Config:
 
     @classmethod
     def ensure_dirs(cls) -> None:
-        cls.DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
         cls.AUTH_DB.parent.mkdir(parents=True, exist_ok=True)
         cls.USERS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class TestConfig(Config):
     TESTING = True
-    DATABASE_PATH = Path(os.environ.get("TEST_DATABASE_PATH", INSTANCE_DIR / "test.sqlite3"))

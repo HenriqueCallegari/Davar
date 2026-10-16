@@ -1,7 +1,8 @@
 """Camada de estudo: grifos por cor, anotacoes (markdown), favoritos e colecoes.
 
-Persistencia em SQLite (mesmo arquivo dos planos, tabelas proprias).
-Modelo de usuario unico por enquanto; estruturado para receber user_id no futuro.
+Persistencia em SQLite (mesmo arquivo dos planos, tabelas proprias). Cada
+usuario tem seu proprio arquivo (ver core/user_data.py), entao as tabelas nao
+precisam de user_id.
 """
 from __future__ import annotations
 

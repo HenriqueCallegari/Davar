@@ -12,7 +12,6 @@ from app.config import Config
 from app.core import clock
 from app.core.db import connect
 
-DATABASE_PATH = Config.DATABASE_PATH
 ANNUAL_PLAN_YEAR = Config.ANNUAL_PLAN_YEAR
 
 # Conquistas: cada uma tem um predicado sobre o contexto agregado de leitura.

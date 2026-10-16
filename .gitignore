@@ -5,3 +5,8 @@ reading_plans.sqlite3
 instance/
 *.sqlite3
 .venv/
+
+# SQLite WAL
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal

@@ -54,7 +54,7 @@ Foram deixados de fora por exigirem **dados curados** que não devem ser inventa
 | Lugares / Mapas | Coordenadas + eventos em `data/lugares.json` + camada de mapa offline | novo blueprint `places/` |
 | Linha do tempo | Cronologia curada em `data/timeline.json` | novo blueprint `timeline/` |
 | Companheiro com IA | Chave da Claude API (`ANTHROPIC_API_KEY`) | `study/` — rota `/api/estudo/ia` enviando o capítulo como contexto |
-| Devocionais | `data/devocionais.json` (config já prevê `DEVOTIONALS_PATH`) | `study/` |
+| Devocionais | `data/devocionais.json` | `study/` |
 | Planos personalizados | Formulário + geração de schedule sob demanda | `plans/` (schedule já é data-driven) |
 | Sincronização em nuvem / login / multi-dispositivo | Auth + `user_id` nas tabelas (já isoladas por repositório) | `core/auth/` + coluna `user_id` |
 | Offline completo | Precache de páginas/capítulos no service worker | `static/sw.js` |
