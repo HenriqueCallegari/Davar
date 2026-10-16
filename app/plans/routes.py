@@ -7,6 +7,12 @@ from app.core.auth import current_plans
 
 bp = Blueprint("plans", __name__)
 
+MAX_NOTE_LENGTH = 10_000
+
+
+def _is_int(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
 
 @bp.route("/planos")
 def listar_planos():
@@ -40,7 +46,7 @@ def salvar_progresso(plano_id: int):
     capitulo = payload.get("capitulo")
     concluido = bool(payload.get("concluido"))
 
-    if not livro or not isinstance(capitulo, int):
+    if not livro or not _is_int(capitulo):
         return jsonify({"erro": "Dados inválidos para atualizar o progresso."}), 400
 
     resultado = current_plans().update_progress(plano_id, livro, capitulo, concluido)
@@ -49,11 +55,27 @@ def salvar_progresso(plano_id: int):
     return jsonify(resultado)
 
 
+@bp.post("/api/leitura/capitulo")
+def registrar_leitura_livre():
+    """Capitulo lido fora de um plano: entra em sequencia, heatmap e conquistas."""
+    payload = request.get_json(silent=True) or {}
+    abbrev = str(payload.get("abbrev", "")).strip()
+    capitulo = payload.get("capitulo")
+    if not abbrev or not _is_int(capitulo):
+        return jsonify({"erro": "Referência inválida."}), 400
+    resultado = current_plans().mark_chapter_read(abbrev, capitulo)
+    if resultado is None:
+        return jsonify({"erro": "Capítulo não encontrado."}), 404
+    return jsonify(resultado)
+
+
 @bp.post("/api/planos/<int:plano_id>/dia/<int:dia>/nota")
 def salvar_nota(plano_id: int, dia: int):
     payload = request.get_json(silent=True) or {}
     texto = str(payload.get("texto", ""))
+    if len(texto) > MAX_NOTE_LENGTH:
+        return jsonify({"erro": f"A anotação pode ter no máximo {MAX_NOTE_LENGTH} caracteres."}), 400
     resultado = current_plans().save_note(plano_id, dia, texto)
     if resultado is None:
-        return jsonify({"erro": "Plano não encontrado."}), 404
+        return jsonify({"erro": "Plano ou dia não encontrado."}), 404
     return jsonify(resultado)

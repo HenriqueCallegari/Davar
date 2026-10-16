@@ -6,7 +6,6 @@ Modelo de usuario unico por enquanto; estruturado para receber user_id no futuro
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -163,7 +162,7 @@ class StudyRepository:
 
     # ---- anotacoes ----------------------------------------------------
     def save_note(self, abbrev: str, chapter: int, verse: int, texto: str, tags: str = "") -> dict[str, Any]:
-        now = datetime.now().isoformat(timespec="seconds")
+        now = clock.now().isoformat(timespec="seconds")
         clean_tags = ",".join(
             tag.strip() for tag in tags.replace("#", "").split(",") if tag.strip()
         )
@@ -224,7 +223,7 @@ class StudyRepository:
         return row["texto"] if row else ""
 
     def save_chapter_note(self, abbrev: str, chapter: int, texto: str) -> dict[str, Any]:
-        now = datetime.now().isoformat(timespec="seconds")
+        now = clock.now().isoformat(timespec="seconds")
         with self._connect() as connection:
             if not texto.strip():
                 connection.execute(
@@ -288,7 +287,7 @@ class StudyRepository:
 
     def export_all(self) -> dict[str, Any]:
         return {
-            "exported_at": datetime.now().isoformat(timespec="seconds"),
+            "exported_at": clock.now().isoformat(timespec="seconds"),
             "highlights": self.list_highlights(),
             "favorites": self.list_favorites(),
             "notes": self.list_notes(),

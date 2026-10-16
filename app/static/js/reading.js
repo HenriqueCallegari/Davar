@@ -230,18 +230,29 @@
   // ---------- Barra de rolagem + auto-marcar ----------
   var bar = document.getElementById("scrollProgress");
   var marked = false, scrolled = false;
+  var openedAt = Date.now();
+  var MIN_READ_MS = 12000;  // rolar até o fim em poucos segundos não conta como leitura
+  var minReadTimer = null;
+
+  function toastAchievements(d) {
+    (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || ""); });
+  }
   function autoMark() {
     if (marked) return;
     marked = true;
-    try { localStorage.setItem("kja_read_" + ABBREV + "_" + CHAPTER, "1"); } catch (e) {}
     if (PLANO) {
       window.postJSON("/api/planos/" + PLANO + "/progresso", { livro: BOOK, capitulo: CHAPTER, concluido: true })
         .then(function (d) {
           window.showToast("Capítulo marcado como lido", "✓");
-          (d.new_achievements || []).forEach(function (a) { window.showToast("Conquista: " + a.nome, a.icone || ""); });
+          toastAchievements(d);
         }).catch(function () {});
     } else {
-      window.showToast("Leitura concluída", "✓");
+      // Leitura livre (fora de plano): também entra em sequência, crescimento e conquistas.
+      window.postJSON("/api/leitura/capitulo", { abbrev: ABBREV, capitulo: CHAPTER })
+        .then(function (d) {
+          window.showToast("Leitura concluída", "✓");
+          toastAchievements(d);
+        }).catch(function () {});
     }
   }
   function onScroll() {
@@ -249,14 +260,21 @@
     var h = doc.scrollHeight - doc.clientHeight;
     var pct = h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0;
     if (bar) bar.style.width = pct + "%";
-    if (pct >= 92) autoMark();
+    if (pct >= 92 && !marked) {
+      var wait = MIN_READ_MS - (Date.now() - openedAt);
+      if (wait <= 0) { autoMark(); }
+      else if (!minReadTimer) {
+        // Chegou ao fim cedo demais: confirma quando o tempo mínimo passar.
+        minReadTimer = setTimeout(function () { minReadTimer = null; onScroll(); }, wait + 50);
+      }
+    }
   }
   window.addEventListener("scroll", function () { scrolled = true; onScroll(); }, { passive: true });
   onScroll();
   setTimeout(function () {
     var doc = document.documentElement;
     if (doc.scrollHeight - doc.clientHeight < 40 && !scrolled) autoMark();
-  }, 20000);
+  }, 20000);  // capítulo curto que cabe na tela: marca após 20s sem rolagem
 
   // ---------- Pomodoro ----------
   var pomBtn = document.getElementById("pomodoro");

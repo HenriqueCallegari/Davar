@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import sqlite3
 from datetime import datetime, timedelta
@@ -52,9 +54,17 @@ ACHIEVEMENTS = (
 class ReadingPlanRepository:
     """SQLite access layer for reading plans, progress, notes, and statistics."""
 
-    def __init__(self, bible: list[dict[str, Any]], db_path: Path = DATABASE_PATH) -> None:
+    def __init__(self, bible: list[dict[str, Any]], db_path: Path) -> None:
         self.bible = bible
         self.db_path = Path(db_path)
+        # (abbrev, capitulo) -> numero de versiculos; valida referencias e
+        # permite somar versiculos lidos sem contar o mesmo capitulo duas vezes.
+        self._verse_counts: dict[tuple[str, int], int] = {
+            (book["abbrev"], number): len(verses)
+            for book in bible
+            for number, verses in enumerate(book["chapters"], start=1)
+        }
+        self._canonical_abbrev = {book["abbrev"].lower(): book["abbrev"] for book in bible}
         self.old_testament = self._flatten_books(bible[:39], "Antigo Testamento")
         self.new_testament = self._flatten_books(bible[39:], "Novo Testamento")
         self._initialize()
@@ -75,6 +85,7 @@ class ReadingPlanRepository:
                 nome TEXT NOT NULL,
                 tipo TEXT NOT NULL UNIQUE,
                 total_dias INTEGER NOT NULL,
+                assinatura TEXT,
                 criado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -128,6 +139,16 @@ class ReadingPlanRepository:
                 desbloqueado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- Leituras fora de um plano (leitura livre). Entram na contagem global
+            -- de capitulos lidos, na sequencia e no heatmap.
+            CREATE TABLE IF NOT EXISTS free_reads (
+                abbrev TEXT NOT NULL,
+                capitulo INTEGER NOT NULL,
+                data TEXT NOT NULL,
+                lido_em TEXT NOT NULL,
+                PRIMARY KEY (abbrev, capitulo, data)
+            );
+
             CREATE TABLE IF NOT EXISTS plan_bookmarks (
                 plano_id INTEGER PRIMARY KEY,
                 dia INTEGER NOT NULL,
@@ -136,6 +157,10 @@ class ReadingPlanRepository:
             );
             """
         )
+        # Bancos criados antes da coluna `assinatura`.
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(reading_plans)")}
+        if "assinatura" not in columns:
+            connection.execute("ALTER TABLE reading_plans ADD COLUMN assinatura TEXT")
 
     def _seed_plans(self, connection: sqlite3.Connection) -> None:
         definitions = (
@@ -163,44 +188,75 @@ class ReadingPlanRepository:
             schedule = plan["schedule"]
             total_days = len(schedule)
             expected_count = sum(len(day) for day in schedule)
+            signature = self._schedule_signature(schedule)
+
+            existing = connection.execute(
+                "SELECT assinatura FROM reading_plans WHERE id = ?", (plan["id"],)
+            ).fetchone()
             connection.execute(
                 """
-                INSERT INTO reading_plans (id, nome, tipo, total_dias)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO reading_plans (id, nome, tipo, total_dias, assinatura)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     nome = excluded.nome,
                     tipo = excluded.tipo,
-                    total_dias = excluded.total_dias
+                    total_dias = excluded.total_dias,
+                    assinatura = excluded.assinatura
                 """,
-                (plan["id"], plan["nome"], plan["tipo"], total_days),
+                (plan["id"], plan["nome"], plan["tipo"], total_days, signature),
             )
+            progress_count = connection.execute(
+                "SELECT COUNT(*) AS n FROM reading_progress WHERE plano_id = ?", (plan["id"],)
+            ).fetchone()["n"]
 
-            current = connection.execute(
-                """
-                SELECT rp.total_dias, COUNT(rg.id) AS progress_count
-                FROM reading_plans rp
-                LEFT JOIN reading_progress rg ON rg.plano_id = rp.id
-                WHERE rp.id = ?
-                GROUP BY rp.id
-                """,
-                (plan["id"],),
-            ).fetchone()
+            # A assinatura (hash do cronograma inteiro) detecta qualquer mudanca de
+            # layout — inclusive trocar ANNUAL_PLAN_YEAR com a mesma contagem.
             needs_rebuild = (
-                current is None
-                or current["total_dias"] != total_days
-                or current["progress_count"] != expected_count
+                existing is None
+                or existing["assinatura"] != signature
+                or progress_count != expected_count
             )
-
             if needs_rebuild:
-                connection.execute("DELETE FROM reading_progress WHERE plano_id = ?", (plan["id"],))
-                connection.execute("DELETE FROM reading_notes WHERE plano_id = ?", (plan["id"],))
-                self._insert_schedule(connection, plan["id"], schedule)
+                self._rebuild_schedule(connection, plan["id"], schedule)
 
             connection.execute(
                 "INSERT OR IGNORE INTO user_statistics (plano_id) VALUES (?)",
                 (plan["id"],),
             )
             self._refresh_statistics(connection, plan["id"])
+
+    @staticmethod
+    def _schedule_signature(schedule: list[list[dict[str, Any]]]) -> str:
+        layout = [[(c["abbrev"], c["chapter"]) for c in day] for day in schedule]
+        return hashlib.sha1(json.dumps(layout).encode()).hexdigest()
+
+    def _rebuild_schedule(
+        self,
+        connection: sqlite3.Connection,
+        plan_id: int,
+        schedule: list[list[dict[str, Any]]],
+    ) -> None:
+        """Recria o cronograma PRESERVANDO o que o usuario ja leu (por livro+capitulo).
+        As anotacoes por dia tambem sao mantidas."""
+        done = {
+            (row["livro"], row["capitulo"]): row["data_conclusao"]
+            for row in connection.execute(
+                """
+                SELECT livro, capitulo, data_conclusao FROM reading_progress
+                WHERE plano_id = ? AND concluido = 1
+                """,
+                (plan_id,),
+            ).fetchall()
+        }
+        connection.execute("DELETE FROM reading_progress WHERE plano_id = ?", (plan_id,))
+        self._insert_schedule(connection, plan_id, schedule)
+        connection.executemany(
+            """
+            UPDATE reading_progress SET concluido = 1, data_conclusao = ?
+            WHERE plano_id = ? AND livro = ? AND capitulo = ?
+            """,
+            [(when, plan_id, livro, capitulo) for (livro, capitulo), when in done.items()],
+        )
 
     def _insert_schedule(
         self,
@@ -309,24 +365,57 @@ class ReadingPlanRepository:
             plans = connection.execute(
                 "SELECT id, nome, tipo, total_dias FROM reading_plans ORDER BY id"
             ).fetchall()
-            return [self._plan_summary(connection, row) for row in plans]
+            streak = self._calendar_streak(connection)  # igual para todos os planos
+            return [self._plan_summary(connection, row, streak) for row in plans]
+
+    def continue_reading(self) -> dict[str, Any] | None:
+        """Onde o leitor parou, para a tela inicial: plano, dia e capitulos
+        pendentes por extenso ("Mateus 5-7"). Sem numeros de progresso."""
+        with self._connect() as connection:
+            plans = connection.execute(
+                "SELECT id, nome, total_dias FROM reading_plans ORDER BY id"
+            ).fetchall()
+            if not plans:
+                return None
+            candidates = []
+            for plan in plans:
+                progress = self._plan_progress(connection, plan["id"])
+                done, total = progress["completed_chapters"], progress["total_chapters"]
+                if done < total:  # ainda ha o que ler
+                    candidates.append((plan, done, total))
+            if not candidates:
+                return None  # tudo concluido: a home mostra o convite padrao
+            # Prefere o plano ja iniciado e mais adiantado; senao, o primeiro.
+            started = [c for c in candidates if c[1] > 0]
+            if started:
+                plan, _done, _total = max(started, key=lambda c: c[1] / c[2])
+            else:
+                plan, _done, _total = candidates[0]
+            iniciado = bool(started)
+
+            day = self._effective_day(connection, plan["id"], plan["total_dias"])
+            chapters = self._chapters_for_day(connection, plan["id"], day)
+            pending = [c for c in chapters if not c["concluido"]] or chapters
+            first = pending[0] if pending else None
+            return {
+                "plano_id": plan["id"],
+                "nome": plan["nome"],
+                "dia": day,
+                "iniciado": iniciado,
+                "capitulos": chapters_label(pending),
+                "proximo": None if first is None else {
+                    "abbrev": first["abbrev"],
+                    "capitulo": first["capitulo"],
+                    "rotulo": f"{first['livro']} {first['capitulo']}",
+                },
+            }
 
     def reading_overview(self) -> dict[str, Any]:
         """Agregados para o dashboard: totais, sequencia e sugestao de continuacao."""
         plans = self.list_plans()
         with self._connect() as connection:
-            row = connection.execute(
-                """
-                SELECT
-                    SUM(CASE WHEN concluido = 1 THEN 1 ELSE 0 END) AS capitulos,
-                    SUM(CASE WHEN concluido = 1 THEN versiculos ELSE 0 END) AS versiculos
-                FROM reading_progress
-                """
-            ).fetchone()
+            chapters, verses = self._read_totals(connection)
             streak = self._calendar_streak(connection)
-
-        chapters = int((row["capitulos"] if row else 0) or 0)
-        verses = int((row["versiculos"] if row else 0) or 0)
 
         in_progress = [p for p in plans if 0 < p["progress"]["percent"] < 100]
         candidate = max(in_progress, key=lambda p: p["progress"]["percent"], default=None)
@@ -356,18 +445,23 @@ class ReadingPlanRepository:
     def growth_data(self, weeks: int = 26) -> dict[str, Any]:
         """Dados para o painel de crescimento (heatmap + evolucao semanal)."""
         with self._connect() as connection:
+            # Um capitulo lido no mesmo dia conta uma vez, mesmo estando em varios planos.
             rows = connection.execute(
                 """
-                SELECT substr(data_conclusao, 1, 10) AS dia, COUNT(*) AS total
-                FROM reading_progress
-                WHERE concluido = 1 AND data_conclusao IS NOT NULL
+                SELECT dia, COUNT(*) AS total FROM (
+                    SELECT abbrev, capitulo, substr(data_conclusao, 1, 10) AS dia
+                    FROM reading_progress
+                    WHERE concluido = 1 AND data_conclusao IS NOT NULL
+                    UNION
+                    SELECT abbrev, capitulo, data AS dia FROM free_reads
+                )
                 GROUP BY dia
                 """
             ).fetchall()
             streak = self._calendar_streak(connection)
 
         daily_counts = {row["dia"]: int(row["total"]) for row in rows if row["dia"]}
-        today = datetime.now().date()
+        today = clock.now().date()
 
         # Grade do heatmap: ultimas `weeks` semanas, comecando no domingo.
         start = today - timedelta(days=today.weekday() + 1 + (weeks - 1) * 7)
@@ -419,7 +513,8 @@ class ReadingPlanRepository:
                 "SELECT texto FROM reading_notes WHERE plano_id = ? AND dia = ?",
                 (plan_id, selected_day),
             ).fetchone()
-            statistics = self._statistics(connection, plan_id)
+            progress = self._plan_progress(connection, plan_id)
+            statistics = self._statistics(connection, plan_id, progress=progress)
             day_verses = sum(chapter["versiculos"] for chapter in chapters)
             day_completed = bool(chapters) and all(chapter["concluido"] for chapter in chapters)
             first_pending = next((chapter for chapter in chapters if not chapter["concluido"]), None)
@@ -439,7 +534,7 @@ class ReadingPlanRepository:
                 "day_completed": day_completed,
                 "first_pending": first_pending,
                 "estimated_minutes": self._estimate_minutes(day_verses),
-                "progress": self._plan_progress(connection, plan_id),
+                "progress": progress,
             }
 
     def update_progress(
@@ -460,7 +555,7 @@ class ReadingPlanRepository:
             if row is None:
                 return None
 
-            completed_at = datetime.now().isoformat(timespec="seconds") if completed else None
+            completed_at = clock.now().isoformat(timespec="seconds") if completed else None
             connection.execute(
                 """
                 UPDATE reading_progress
@@ -488,13 +583,13 @@ class ReadingPlanRepository:
             }
 
     def save_note(self, plan_id: int, day: int, text: str) -> dict[str, Any] | None:
-        now = datetime.now().isoformat(timespec="seconds")
+        now = clock.now().isoformat(timespec="seconds")
         with self._connect() as connection:
-            exists = connection.execute(
-                "SELECT 1 FROM reading_plans WHERE id = ?",
+            plan = connection.execute(
+                "SELECT total_dias FROM reading_plans WHERE id = ?",
                 (plan_id,),
             ).fetchone()
-            if exists is None:
+            if plan is None or not (1 <= day <= plan["total_dias"]):
                 return None
             connection.execute(
                 """
@@ -525,9 +620,11 @@ class ReadingPlanRepository:
                 "current_day": self._effective_day(connection, plan_id, plan["total_dias"]),
             }
 
-    def _plan_summary(self, connection: sqlite3.Connection, plan: sqlite3.Row) -> dict[str, Any]:
+    def _plan_summary(
+        self, connection: sqlite3.Connection, plan: sqlite3.Row, streak: dict[str, int] | None = None
+    ) -> dict[str, Any]:
         progress = self._plan_progress(connection, plan["id"])
-        statistics = self._statistics(connection, plan["id"])
+        statistics = self._statistics(connection, plan["id"], progress=progress, streak=streak)
         return {
             **dict(plan),
             "progress": progress,
@@ -630,7 +727,13 @@ class ReadingPlanRepository:
             "percent": percent,
         }
 
-    def _statistics(self, connection: sqlite3.Connection, plan_id: int) -> dict[str, Any]:
+    def _statistics(
+        self,
+        connection: sqlite3.Connection,
+        plan_id: int,
+        progress: dict[str, Any] | None = None,
+        streak: dict[str, int] | None = None,
+    ) -> dict[str, Any]:
         row = connection.execute(
             """
             SELECT capitulos_lidos, versiculos_lidos, dias_consecutivos, maior_sequencia,
@@ -647,10 +750,10 @@ class ReadingPlanRepository:
                 (plan_id,),
             ).fetchone()
 
-        progress = self._plan_progress(connection, plan_id)
+        progress = progress or self._plan_progress(connection, plan_id)
         remaining_days = self._remaining_days(connection, plan_id)
-        completion_date = datetime.now().date() + timedelta(days=max(remaining_days - 1, 0))
-        calendar_streak = self._calendar_streak(connection)
+        completion_date = clock.today() + timedelta(days=max(remaining_days - 1, 0))
+        calendar_streak = streak or self._calendar_streak(connection)
         return {
             **dict(row),
             "capitulos_restantes": progress["remaining_chapters"],
@@ -664,7 +767,7 @@ class ReadingPlanRepository:
         progress = self._plan_progress(connection, plan_id)
         streak = self._completed_day_streak(connection, plan_id)
         reading_minutes = self._estimate_minutes(progress["completed_verses"])
-        now = datetime.now().isoformat(timespec="seconds")
+        now = clock.now().isoformat(timespec="seconds")
         connection.execute(
             """
             UPDATE user_statistics
@@ -690,7 +793,7 @@ class ReadingPlanRepository:
     def _touch_statistics(self, connection: sqlite3.Connection, plan_id: int) -> None:
         connection.execute(
             "UPDATE user_statistics SET ultimo_acesso = ? WHERE plano_id = ?",
-            (datetime.now().isoformat(timespec="seconds"), plan_id),
+            (clock.now().isoformat(timespec="seconds"), plan_id),
         )
 
     def _completed_day_streak(self, connection: sqlite3.Connection, plan_id: int) -> int:
@@ -714,8 +817,60 @@ class ReadingPlanRepository:
                 break
         return streak
 
+    def _read_totals(self, connection: sqlite3.Connection) -> tuple[int, int]:
+        """(capitulos, versiculos) lidos, contando cada capitulo UMA vez, mesmo que
+        apareca em varios planos, e incluindo a leitura livre."""
+        rows = connection.execute(
+            """
+            SELECT abbrev, capitulo FROM reading_progress WHERE concluido = 1
+            UNION
+            SELECT abbrev, capitulo FROM free_reads
+            """
+        ).fetchall()
+        chapters = {(row["abbrev"], row["capitulo"]) for row in rows}
+        verses = sum(self._verse_counts.get(key, 0) for key in chapters)
+        return len(chapters), verses
+
+    def read_chapters_of_book(self, abbrev: str) -> set[int]:
+        """Numeros dos capitulos ja lidos de um livro (planos + leitura livre)."""
+        canonical = self._canonical_abbrev.get(str(abbrev).lower())
+        if canonical is None:
+            return set()
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT capitulo FROM reading_progress WHERE concluido = 1 AND abbrev = ?
+                UNION
+                SELECT capitulo FROM free_reads WHERE abbrev = ?
+                """,
+                (canonical, canonical),
+            ).fetchall()
+        return {row["capitulo"] for row in rows}
+
+    def mark_chapter_read(self, abbrev: str, chapter: int) -> dict[str, Any] | None:
+        """Registra a leitura de um capitulo fora de plano (leitura livre).
+        Retorna None se a referencia nao existe na Biblia."""
+        canonical = self._canonical_abbrev.get(str(abbrev).lower())
+        if canonical is None or (canonical, chapter) not in self._verse_counts:
+            return None
+        now = clock.now()
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT OR IGNORE INTO free_reads (abbrev, capitulo, data, lido_em) VALUES (?, ?, ?, ?)",
+                (canonical, chapter, now.date().isoformat(), now.isoformat(timespec="seconds")),
+            )
+            self._record_activity(connection)
+            new_codes = self._sync_achievements(connection)
+            total, _verses = self._read_totals(connection)
+            return {
+                "capitulos_lidos": total,
+                "new_achievements": [
+                    a for a in (self._achievement_by_code(code) for code in new_codes) if a is not None
+                ],
+            }
+
     def _record_activity(self, connection: sqlite3.Connection) -> None:
-        today = datetime.now().date().isoformat()
+        today = clock.today().isoformat()
         connection.execute(
             "INSERT OR IGNORE INTO reading_activity (data) VALUES (?)",
             (today,),
@@ -747,7 +902,7 @@ class ReadingPlanRepository:
                 run = 1
             best = max(best, run)
 
-        today = datetime.now().date()
+        today = clock.now().date()
         last = dates[-1]
         gap = (today - last).days
         if gap > 1:
@@ -762,13 +917,7 @@ class ReadingPlanRepository:
         return {"atual": current_streak, "melhor": best}
 
     def _achievement_context(self, connection: sqlite3.Connection) -> dict[str, Any]:
-        totals = connection.execute(
-            """
-            SELECT
-                SUM(CASE WHEN concluido = 1 THEN 1 ELSE 0 END) AS total_chapters
-            FROM reading_progress
-            """
-        ).fetchone()
+        total_chapters, _verses = self._read_totals(connection)
         completed_plans = connection.execute(
             """
             SELECT rp.tipo
@@ -780,7 +929,7 @@ class ReadingPlanRepository:
         ).fetchall()
         streak = self._calendar_streak(connection)
         return {
-            "total_chapters": int((totals["total_chapters"] if totals else 0) or 0),
+            "total_chapters": total_chapters,
             "best_streak": streak["melhor"],
             "current_streak": streak["atual"],
             "completed_plans": {row["tipo"] for row in completed_plans},
@@ -794,7 +943,7 @@ class ReadingPlanRepository:
             for row in connection.execute("SELECT codigo FROM achievements").fetchall()
         }
         newly: list[str] = []
-        now = datetime.now().isoformat(timespec="seconds")
+        now = clock.now().isoformat(timespec="seconds")
         for achievement in ACHIEVEMENTS:
             if achievement["codigo"] in unlocked:
                 continue
@@ -865,7 +1014,7 @@ class ReadingPlanRepository:
         return int(row["remaining"] or 0)
 
     def _estimate_minutes(self, verses: int) -> int:
-        return max(1, int(math.ceil(verses / 4.8))) if verses else 0
+        return max(1, int(math.ceil(verses / Config.VERSES_PER_MINUTE))) if verses else 0
 
     def _daily_portion_date(self, day: int):
         return datetime(ANNUAL_PLAN_YEAR, 1, 1).date() + timedelta(days=day - 1)
