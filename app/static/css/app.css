@@ -865,6 +865,14 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 }
 .news-card__note { margin-top: var(--sp-4); color: var(--text-faint); font-size: var(--step--1); }
 
+/* Capítulos com estudo escrito (lista de capítulos do livro) */
+.chapter-tile--estudo { position: relative; }
+.chapter-tile--estudo::after {
+  content: "✦"; position: absolute; top: 2px; right: 5px;
+  font-size: .6em; color: var(--accent, currentColor); opacity: .8;
+}
+.study-legend { margin-left: .5em; font-size: .85em; opacity: .75; }
+
 /* ============================================================
    JOGOS, MEMORIZAÇÃO E LIVROS POR CATEGORIA
    ============================================================ */
@@ -1019,6 +1027,29 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 .practice-card { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
 .practice-card h2 { font-size: var(--step-1); }
 .practice-card__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+/* ---- livros por categoria ---- */
+.cat-amarelo { --cat: var(--c-amarelo); } .cat-azul { --cat: var(--c-azul); } .cat-verde { --cat: var(--c-verde); }
+.cat-vermelho { --cat: var(--c-vermelho); } .cat-roxo { --cat: var(--c-roxo); }
+.testament-block { margin-top: var(--sp-5); }
+.testament-title { font-family: var(--font-serif); font-weight: 400; font-size: var(--step-2); padding-bottom: var(--sp-2); border-bottom: 1px solid var(--line); }
+.book-group { margin-top: var(--sp-4); }
+.book-group__title { display: flex; align-items: center; gap: .55rem; font-size: var(--step-0); margin-bottom: var(--sp-2); }
+.book-group__title small { color: var(--text-faint); font-weight: 600; margin-left: .2rem; }
+.book-group__dot { width: 11px; height: 11px; border-radius: 50%; background: var(--cat); }
+.book-group .book-card { border-top: 3px solid var(--cat); }
+.book-group .book-card:hover { border-color: var(--cat); }
+.book-group .book-badge { background: color-mix(in srgb, var(--cat) 18%, var(--surface-hi)); color: var(--text-soft); }
+.book-chapters { font-size: var(--step--1); color: var(--text-faint); }
+
+/* ---- capítulos lidos ---- */
+.chapter-tile { position: relative; }
+.chapter-tile.is-read {
+  background: color-mix(in srgb, var(--progress) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--progress) 45%, var(--line));
+}
+.chapter-tile.is-read::before { content: "✓"; position: absolute; bottom: 3px; right: 7px; font-size: .62em; color: var(--progress); }
+.chapter-tile--estudo::after { top: 3px; }
 
 @media (max-width: 700px) {
   .pairs-grid { grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }

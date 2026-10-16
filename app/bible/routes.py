@@ -50,8 +50,13 @@ def trocar_versao(version_id: str):
 
 @bp.route("/livros")
 def livros():
-    bible = current_bible()
-    return render_template("pages/livros.html", livros=bible.book_summaries())
+    summaries = current_bible().book_summaries()
+    testamentos: dict[str, list[dict]] = {}
+    for testamento, nome, cor, inicio, fim in GRUPOS_LIVROS:
+        livros = summaries[inicio:fim]
+        if livros:
+            testamentos.setdefault(testamento, []).append({"nome": nome, "cor": cor, "livros": livros})
+    return render_template("pages/livros.html", testamentos=testamentos)
 
 
 @bp.route("/livro/<abbrev>")
@@ -61,11 +66,15 @@ def capitulos(abbrev: str):
     if not book:
         return render_template("pages/error.html", code=404,
                                mensagem="Livro não encontrado."), 404
+    estudos = current_app.services.chapter_study
+    total = len(book["chapters"])
     return render_template(
         "pages/capitulos.html",
         abbrev=book["abbrev"],
         name=book["name"],
-        total=len(book["chapters"]),
+        total=total,
+        com_estudo={n for n in range(1, total + 1) if estudos.get(book["abbrev"], n)},
+        lidos=current_plans().read_chapters_of_book(book["abbrev"]),
     )
 
 

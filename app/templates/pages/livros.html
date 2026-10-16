@@ -4,24 +4,32 @@
 <div class="page-head">
   <p class="eyebrow">Escrituras</p>
   <h1>Livros da Bíblia</h1>
-  <p>Toque em um livro para navegar pelos capítulos. Use a busca para encontrar qualquer palavra ou versículo.</p>
+  <p>Toque em um livro para navegar pelos capítulos. Cada cor reúne um grupo de livros — da Lei aos Profetas, dos Evangelhos às Cartas.</p>
 </div>
 
 <input type="text" id="busca" class="tool-input" placeholder="Filtrar livro por nome…" aria-label="Filtrar livro">
 
-{% set testamentos = ['Antigo Testamento', 'Novo Testamento'] %}
-{% for t in testamentos %}
-  <span class="testament-tag">{{ t }}</span>
-  <ul class="book-grid" data-testament>
-    {% for l in livros if l.testament == t %}
-      <li>
-        <a href="{{ url_for('bible.capitulos', abbrev=l.abbrev) }}" class="book-card" data-name="{{ l.name|lower }}">
-          <span class="book-badge">{{ l.abbrev }}</span>
-          <span class="book-title">{{ l.name }}</span>
-        </a>
-      </li>
+{% for testamento, grupos in testamentos.items() %}
+  <section class="testament-block">
+    <h2 class="testament-title">{{ testamento }}</h2>
+    {% for g in grupos %}
+      <div class="book-group cat-{{ g.cor }}" data-group>
+        <h3 class="book-group__title"><span class="book-group__dot" aria-hidden="true"></span>{{ g.nome }}
+          <small>{{ g.livros|length }} {{ 'livro' if g.livros|length == 1 else 'livros' }}</small></h3>
+        <ul class="book-grid">
+          {% for l in g.livros %}
+            <li>
+              <a href="{{ url_for('bible.capitulos', abbrev=l.abbrev) }}" class="book-card" data-name="{{ l.name|lower }}">
+                <span class="book-badge">{{ l.abbrev }}</span>
+                <span class="book-title">{{ l.name }}</span>
+                <span class="book-chapters">{{ l.chapters }} cap.</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
     {% endfor %}
-  </ul>
+  </section>
 {% endfor %}
 
 {% endblock %}
@@ -29,10 +37,15 @@
 <script>
   var input = document.getElementById("busca");
   input.addEventListener("input", function () {
-    var termo = input.value.toLowerCase();
+    var termo = input.value.toLowerCase().trim();
     document.querySelectorAll(".book-grid li").forEach(function (li) {
       var card = li.querySelector(".book-card");
       li.style.display = card.dataset.name.includes(termo) ? "" : "none";
+    });
+    // esconde grupos sem nenhum livro visível
+    document.querySelectorAll("[data-group]").forEach(function (group) {
+      var any = Array.prototype.some.call(group.querySelectorAll(".book-grid li"), function (li) { return li.style.display !== "none"; });
+      group.style.display = any ? "" : "none";
     });
   });
 </script>
