@@ -47,6 +47,14 @@
       </article>
     {% endfor %}
   </div>
+
+  {% if resultado.truncated and limite < limite_max %}
+    <p style="margin-top:var(--sp-4); text-align:center">
+      <a class="btn btn--ghost" href="{{ url_for('bible.buscar', q=query, testamento=testamento, livro=livro, limite=proximo_limite) }}">Mostrar mais resultados</a>
+    </p>
+  {% elif resultado.truncated %}
+    <p class="search-summary">Refine a busca (livro ou testamento) para ver as demais ocorrências.</p>
+  {% endif %}
 {% else %}
   <div class="empty-state">Digite algo acima para pesquisar.</div>
 {% endif %}

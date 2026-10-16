@@ -44,6 +44,9 @@ class BibleRepository:
         self._books = books
         self._by_abbrev = {book["abbrev"].lower(): book for book in self._books}
         self._index: list[VerseRef] = self._build_index()
+        # Texto normalizado (sem acento/caixa) calculado UMA vez: busca e temas
+        # deixam de normalizar ~31 mil versiculos a cada requisicao.
+        self._norm: list[str] = [normalize(ref.text) for ref in self._index]
 
     @classmethod
     def from_path(cls, path: Path) -> "BibleRepository":
@@ -156,12 +159,12 @@ class BibleRepository:
 
         target_abbrev = abbrev.lower() if abbrev else None
         total = 0
-        for ref in self._index:
+        for ref, norm_text in zip(self._index, self._norm):
             if testament and ref.testament != testament:
                 continue
             if target_abbrev and ref.abbrev.lower() != target_abbrev:
                 continue
-            if needle in normalize(ref.text):
+            if needle in norm_text:
                 total += 1
                 if len(results) < limit:
                     results.append(
@@ -192,8 +195,8 @@ class BibleRepository:
             return []
         pattern = re.compile(r"\b(?:" + "|".join(re.escape(n) for n in needles) + r")\b")
         found: list[dict[str, Any]] = []
-        for ref in self._index:
-            if pattern.search(normalize(ref.text)):
+        for ref, norm_text in zip(self._index, self._norm):
+            if pattern.search(norm_text):
                 found.append(
                     {
                         "abbrev": ref.abbrev,

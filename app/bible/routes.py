@@ -10,6 +10,24 @@ from app.core.version import current_bible, current_version_id
 
 bp = Blueprint("bible", __name__)
 
+# Grupos tradicionais dos livros (indices no canone de 66 livros): testamento,
+# nome do grupo, cor do design system, intervalo [inicio, fim).
+GRUPOS_LIVROS = (
+    ("Antigo Testamento", "A Lei", "amarelo", 0, 5),
+    ("Antigo Testamento", "Históricos", "azul", 5, 17),
+    ("Antigo Testamento", "Poéticos e sabedoria", "roxo", 17, 22),
+    ("Antigo Testamento", "Profetas maiores", "vermelho", 22, 27),
+    ("Antigo Testamento", "Profetas menores", "verde", 27, 39),
+    ("Novo Testamento", "Evangelhos", "amarelo", 39, 43),
+    ("Novo Testamento", "História da Igreja", "azul", 43, 44),
+    ("Novo Testamento", "Cartas de Paulo", "roxo", 44, 57),
+    ("Novo Testamento", "Cartas gerais", "verde", 57, 65),
+    ("Novo Testamento", "Profecia", "vermelho", 65, 66),
+)
+
+SEARCH_PAGE_SIZE = 200
+SEARCH_MAX_RESULTS = 1000
+
 
 def _safe_next(default_endpoint: str = "dashboard.home") -> str:
     """Evita open-redirect: so aceita caminhos internos."""
@@ -111,9 +129,15 @@ def buscar():
     testament = request.args.get("testamento") or None
     abbrev = request.args.get("livro") or None
 
-    resultado = bible.search(query, testament=testament, abbrev=abbrev) if query else None
+    limite = request.args.get("limite", default=SEARCH_PAGE_SIZE, type=int)
+    limite = max(SEARCH_PAGE_SIZE, min(limite, SEARCH_MAX_RESULTS))
+
+    resultado = bible.search(query, testament=testament, abbrev=abbrev, limit=limite) if query else None
     return render_template(
         "pages/busca.html",
+        limite=limite,
+        proximo_limite=min(limite + SEARCH_PAGE_SIZE, SEARCH_MAX_RESULTS),
+        limite_max=SEARCH_MAX_RESULTS,
         query=query,
         testamento=testament,
         livro=abbrev,
