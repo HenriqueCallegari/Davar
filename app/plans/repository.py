@@ -51,6 +51,35 @@ ACHIEVEMENTS = (
 )
 
 
+def _runs(numbers: list[int]) -> list[str]:
+    """[5, 6, 7, 9] -> ["5-7", "9"]"""
+    runs: list[str] = []
+    start = prev = None
+    for number in sorted(set(numbers)):
+        if start is None:
+            start = prev = number
+        elif number == prev + 1:
+            prev = number
+        else:
+            runs.append(str(start) if start == prev else f"{start}–{prev}")
+            start = prev = number
+    if start is not None:
+        runs.append(str(start) if start == prev else f"{start}–{prev}")
+    return runs
+
+
+def chapters_label(chapters: list[dict[str, Any]]) -> str:
+    """Capitulos por extenso: "Mateus 5–7" ou "Mateus 28 · Marcos 1"."""
+    order: list[str] = []
+    by_book: dict[str, list[int]] = {}
+    for chapter in chapters:
+        if chapter["livro"] not in by_book:
+            order.append(chapter["livro"])
+            by_book[chapter["livro"]] = []
+        by_book[chapter["livro"]].append(chapter["capitulo"])
+    return " · ".join(f"{book} {', '.join(_runs(by_book[book]))}" for book in order)
+
+
 class ReadingPlanRepository:
     """SQLite access layer for reading plans, progress, notes, and statistics."""
 

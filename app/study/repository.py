@@ -241,6 +241,19 @@ class StudyRepository:
             )
         return {"salvo": True, "atualizado_em": now}
 
+    def latest_chapter_note(self) -> dict[str, Any] | None:
+        """Reflexao ("O que Deus falou comigo") mais recente, para a tela inicial."""
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT abbrev, capitulo, texto, atualizado_em FROM chapter_notes "
+                "ORDER BY atualizado_em DESC LIMIT 1"
+            ).fetchone()
+        if row is None:
+            return None
+        data = dict(row)
+        data["reference"] = "%s %d" % (self.bible.book_name(row["abbrev"]), row["capitulo"])
+        return data
+
     def list_chapter_notes(self) -> list[dict[str, Any]]:
         with self._connect() as connection:
             rows = connection.execute(
