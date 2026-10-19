@@ -112,6 +112,13 @@ pública nova (ex.: outro endpoint de PWA), é preciso adicioná-la a esse set.
 ### Dados estáticos vs. gerados pelo usuário
 
 - `data/biblia.json`, `data/ntlh.json` — texto bíblico (grande, ~4-5MB cada).
+- `data/falas_jesus.json` — mapa das falas de Jesus (letras vermelhas), indexado por
+  livro/capítulo/versículo do cânone, portanto vale para **todas as versões**
+  (formato das fichas em `app/bible/falas.py`: `"N"`, `"N-M"`, `"Nc"` = fala depois do
+  1º `:`, `"Ncs"` = só a 1ª frase depois do `:` etc.). Foi montado lendo o texto KJA
+  verso a verso; na NTLH o corte usa o `:` e, na falta dele, o formato de diálogo com
+  travessão. Renderize com o filtro Jinja `{{ texto|fala_jesus(abbrev, cap, vers) }}`;
+  `.fala-jesus` ganha a cor `--fala-jesus` e o leitor liga/desliga em "Letras vermelhas".
 - `data/themes.json` — índice temático (slug + palavras-chave por tema);
   `ThemeService` casa por **palavra inteira** normalizada (sem acento/caixa)
   contra o índice plano da Bíblia, com cache em memória por tema.

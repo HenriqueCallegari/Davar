@@ -41,6 +41,7 @@ class Config:
 
     # Dados estaticos
     THEMES_PATH = Path(os.environ.get("THEMES_PATH", DATA_DIR / "themes.json"))
+    FALAS_JESUS_PATH = Path(os.environ.get("FALAS_JESUS_PATH", DATA_DIR / "falas_jesus.json"))
     CHAPTER_STUDIES_DIR = Path(os.environ.get("CHAPTER_STUDIES_DIR", DATA_DIR / "estudos"))
 
     # Versoes biblicas disponiveis. A primeira com default=True define o canon.

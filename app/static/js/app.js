@@ -13,6 +13,22 @@
     });
   }
 
+  // ----- Letras vermelhas (falas de Jesus): preferência guardada no aparelho -----
+  function setRed(on) {
+    document.body.classList.toggle("no-fala-jesus", !on);
+    document.querySelectorAll("[data-toggle-red]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(on));
+      b.classList.toggle("is-active", on);
+    });
+    try { localStorage.setItem("kja_red", on ? "1" : "0"); } catch (e) {}
+  }
+  var redOn = true;
+  try { redOn = localStorage.getItem("kja_red") !== "0"; } catch (e) {}
+  setRed(redOn);
+  document.querySelectorAll("[data-toggle-red]").forEach(function (b) {
+    b.addEventListener("click", function () { setRed(document.body.classList.contains("no-fala-jesus")); });
+  });
+
   // ----- Toasts -----
   var wrap = document.getElementById("toastWrap");
   window.showToast = function (message, icon) {

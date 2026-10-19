@@ -43,7 +43,7 @@
     {% for r in resultado.results %}
       <article class="card verse-item">
         <a class="ref" href="{{ url_for('bible.capitulo', abbrev=r.abbrev, num=r.chapter) }}#v{{ r.verse }}">{{ r.book }} {{ r.chapter }}:{{ r.verse }}</a>
-        <p class="txt">{{ r.text }}</p>
+        <p class="txt">{{ r.text|fala_jesus(r.abbrev, r.chapter, r.verse) }}</p>
       </article>
     {% endfor %}
   </div>
@@ -67,8 +67,27 @@
     var q = summary ? (summary.dataset.q || "").trim() : "";
     if (!q) return;
     var rx = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+    // Realça só nos nós de texto, preservando os <span class="fala-jesus">.
     document.querySelectorAll("#results .txt").forEach(function (el) {
-      el.innerHTML = el.textContent.replace(rx, "<mark>$1</mark>");
+      var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function (node) {
+        rx.lastIndex = 0;
+        if (!rx.test(node.nodeValue)) return;
+        rx.lastIndex = 0;
+        var frag = document.createDocumentFragment(), last = 0, m;
+        while ((m = rx.exec(node.nodeValue)) !== null) {
+          frag.appendChild(document.createTextNode(node.nodeValue.slice(last, m.index)));
+          var mark = document.createElement("mark");
+          mark.textContent = m[0];
+          frag.appendChild(mark);
+          last = m.index + m[0].length;
+          if (m[0].length === 0) rx.lastIndex++;
+        }
+        frag.appendChild(document.createTextNode(node.nodeValue.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+      });
     });
   })();
 </script>

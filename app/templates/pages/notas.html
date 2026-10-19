@@ -15,7 +15,7 @@
       <article class="card verse-item">
         <div class="meta"><a class="ref" href="{{ url_for('bible.capitulo', abbrev=n.abbrev, num=n.capitulo) }}#v{{ n.versiculo }}">{{ n.reference }}</a>
           {% for tag in n.tag_list %}<span class="chip">#{{ tag }}</span>{% endfor %}</div>
-        <p class="txt">{{ n.text }}</p>
+        <p class="txt">{{ n.text|fala_jesus(n.abbrev, n.capitulo, n.versiculo) }}</p>
         <div class="note-body">{{ n.texto | markdown }}</div>
       </article>
     {% endfor %}

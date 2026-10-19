@@ -13,7 +13,7 @@
     {% for it in colecao.items %}
       <article class="card verse-item">
         <a class="ref" href="{{ url_for('bible.capitulo', abbrev=it.abbrev, num=it.capitulo) }}#v{{ it.versiculo }}">{{ it.reference }}</a>
-        <p class="txt">{{ it.text }}</p>
+        <p class="txt">{{ it.text|fala_jesus(it.abbrev, it.capitulo, it.versiculo) }}</p>
       </article>
     {% endfor %}
   </div>

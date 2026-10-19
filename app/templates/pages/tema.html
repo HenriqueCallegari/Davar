@@ -13,7 +13,7 @@
     {% for v in tema.verses %}
       <article class="card verse-item">
         <a class="ref" href="{{ url_for('bible.capitulo', abbrev=v.abbrev, num=v.chapter) }}#v{{ v.verse }}">{{ v.reference }}</a>
-        <p class="txt">{{ v.text }}</p>
+        <p class="txt">{{ v.text|fala_jesus(v.abbrev, v.chapter, v.verse) }}</p>
       </article>
     {% endfor %}
   </div>

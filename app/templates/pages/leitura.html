@@ -15,6 +15,7 @@
   <button id="ttsBtn" class="btn btn--soft" title="Ouvir"> Ouvir</button>
   <button id="ttsPause" class="btn btn--soft" title="Pausar/continuar">⏸</button>
   <button id="focusBtn" class="btn btn--soft" title="Modo foco"> Foco</button>
+  <button class="btn btn--soft btn--red" type="button" data-toggle-red aria-pressed="true" title="Mostrar as falas de Jesus em vermelho">Letras vermelhas</button>
   {% if alt_sigla %}<button id="compareBtn" class="btn btn--soft" type="button" aria-pressed="false" title="Mostrar cada versículo também na {{ alt_sigla }}">Comparar {{ alt_sigla }}</button>{% endif %}
   <button id="selectModeBtn" class="btn btn--soft" title="Selecionar vários versículos" aria-pressed="false">Selecionar</button>
   <button id="studyTabBtn" class="btn btn--soft study-tab" type="button">
@@ -37,7 +38,7 @@
       <span class="verse__select" aria-hidden="true"></span>
       <span class="verse__num">{{ v.n }}</span>
       <div class="verse__body">
-        <span class="verse__text">{{ v.text }}</span>
+        <span class="verse__text">{{ v.text|fala_jesus(abbrev, num, v.n) }}</span>
         {% if alt_sigla and v.alt %}<span class="verse__alt"><b>{{ alt_sigla }}</b> {{ v.alt }}</span>{% endif %}
         <div class="verse__actions">
           <button class="verse-act mark-btn" title="Grifar ou anotar" aria-label="Grifar ou anotar">

@@ -21,6 +21,15 @@
     }
     return box;
   }
+  // Versículo com as falas de Jesus em vermelho (partes = [[texto, ehFalaDeJesus], ...]).
+  function renderVerse(node, partes, fallback) {
+    node.replaceChildren(document.createTextNode("“"));
+    (partes || [[fallback, false]]).forEach(function (p) {
+      if (p[1]) node.appendChild(el("span", "fala-jesus", p[0]));
+      else node.appendChild(document.createTextNode(p[0]));
+    });
+    node.appendChild(document.createTextNode("”"));
+  }
   // "Na verdade..." -> "N_ v_____ ..." (dica: primeira letra de cada palavra)
   function hintOf(text) {
     return text.split(/\s+/).map(function (w) {
@@ -93,7 +102,7 @@
       fill.style.width = (done / total * 100) + "%";
       ref.textContent = c.referencia;
       hint.textContent = ""; hint.hidden = true;
-      verse.textContent = "“" + c.texto + "”"; verse.hidden = true;
+      renderVerse(verse, c.partes, c.texto); verse.hidden = true;
       tools.hidden = false; rate.hidden = true;
       hintBtn.disabled = false;
     }

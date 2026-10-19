@@ -44,6 +44,7 @@
   --accent-strong: #e8cc94;
   --accent-ring: rgba(216, 184, 120, .35);
   --brand: #cdb892;
+  --fala-jesus: #ee7a6c;
   --progress: #7bb089;
   --shadow: 0 18px 46px rgba(0, 0, 0, .45);
   --shadow-sm: 0 6px 18px rgba(0, 0, 0, .3);
@@ -66,6 +67,7 @@
   --accent-strong: #96702f;
   --accent-ring: rgba(176, 134, 60, .3);
   --brand: #8a6a34;
+  --fala-jesus: #b3261e;
   --progress: #5f9a6c;
   --shadow: 0 18px 44px rgba(78, 55, 25, .14);
   --shadow-sm: 0 6px 16px rgba(78, 55, 25, .1);
@@ -1061,3 +1063,8 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
   .memo-rate { grid-template-columns: 1fr; }
   .memo-card { padding: var(--sp-5) var(--sp-3); }
 }
+
+/* ---- falas de Jesus (letras vermelhas) ---- */
+.fala-jesus { color: var(--fala-jesus); }
+.no-fala-jesus .fala-jesus { color: inherit; }
+.btn--red[aria-pressed="true"] { color: var(--fala-jesus); border-color: color-mix(in srgb, var(--fala-jesus) 55%, transparent); }

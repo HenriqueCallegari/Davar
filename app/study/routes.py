@@ -176,6 +176,7 @@ def api_memorizar_fila():
         cartas.append({
             **card,
             "texto": texto,
+            "partes": current_app.services.falas.as_json(card["abbrev"], card["capitulo"], card["versiculo"], texto),
             "referencia": f"{bible.book_name(card['abbrev'])} {card['capitulo']}:{card['versiculo']}",
         })
     return jsonify({"cartas": cartas, **_study().memorize_counts()})

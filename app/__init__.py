@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from flask import Flask, jsonify, make_response, redirect, render_template, request, session, url_for
 
 from app.auth.repository import AuthRepository
+from app.bible.falas import FalasJesus
 from app.bible.library import BibleLibrary
 from app.bible.repository import BibleRepository
 from app.config import Config
@@ -41,6 +42,7 @@ class Services:
     auth: AuthRepository          # contas
     user_data: UserDataManager    # repositorios por usuario (isolados)
     chapter_study: ChapterStudyService  # sintese teologica por capitulo (global)
+    falas: FalasJesus             # mapa das falas de Jesus (letras vermelhas), vale para todas as versoes
 
 
 def create_app(config_object: type[Config] = Config) -> Flask:
@@ -63,6 +65,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
         user_data=UserDataManager(bible, config_object.USERS_DIR, turso=turso,
                                   backup_delay=config_object.BACKUP_DEBOUNCE_SECONDS),
         chapter_study=ChapterStudyService(config_object.CHAPTER_STUDIES_DIR),
+        falas=FalasJesus(config_object.FALAS_JESUS_PATH),
     )
 
     app.login_limiter_email = AttemptLimiter(
@@ -76,6 +79,9 @@ def create_app(config_object: type[Config] = Config) -> Flask:
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     app.jinja_env.filters["markdown"] = markdown_to_html
+    # {{ texto|fala_jesus(abbrev, capitulo, versiculo) }}: versiculo com as falas de Jesus em vermelho
+    app.jinja_env.filters["fala_jesus"] = (
+        lambda text, abbrev, chapter, verse: app.services.falas.render(text, abbrev, chapter, verse))
     app.jinja_env.globals["csrf_token"] = csrf_token
     _register_blueprints(app)
     _register_shared(app)

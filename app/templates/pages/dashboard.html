@@ -9,7 +9,7 @@
 
   <figure class="home-verse">
     <span class="home-verse__mark" aria-hidden="true">“</span>
-    <blockquote>{{ versiculo.text }}</blockquote>
+    <blockquote>{{ versiculo.text|fala_jesus(versiculo.abbrev, versiculo.chapter, versiculo.verse) }}</blockquote>
     <figcaption>
       <span class="home-verse__label">Para hoje</span>
       <cite>{{ versiculo.reference }}</cite>
